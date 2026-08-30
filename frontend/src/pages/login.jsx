@@ -47,10 +47,10 @@ export default function LoginPage() {
     clearError();
     if (role === 'admin') {
       setEmail('admin@campus.edu');
-      setPassword('AdminPass123!');
+      setPassword('AdminPassword123!');
     } else {
       setEmail('student@campus.edu');
-      setPassword('StudentPass123!');
+      setPassword('StudentPassword123!');
     }
   };
 

@@ -60,7 +60,7 @@ export default function RegisterPage() {
     clearError();
     setName('Aarav Sharma');
     setEmail(`student_${Math.floor(Math.random() * 8999 + 1000)}@campus.edu`);
-    setPassword('StudentPass123!');
+    setPassword('StudentPassword123!');
     setRole('student');
   };
 
