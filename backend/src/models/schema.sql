@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS documents (
     title VARCHAR(255) NOT NULL,
     filename VARCHAR(255) NOT NULL,
     file_url TEXT NOT NULL,
+    file_data TEXT,
     category VARCHAR(50) NOT NULL DEFAULT 'General' CHECK (
         category IN ('Admissions', 'Academics', 'Hostel', 'Fees', 'Exams', 'Placements', 'General')
     ),
@@ -32,6 +33,9 @@ CREATE TABLE IF NOT EXISTS documents (
     uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migration for existing database tables
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_data TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_documents_category ON documents(category);
 CREATE INDEX IF NOT EXISTS idx_documents_uploaded_by ON documents(uploaded_by);

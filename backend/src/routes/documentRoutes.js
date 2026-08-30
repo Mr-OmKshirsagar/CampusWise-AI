@@ -13,6 +13,7 @@ router.use(authMiddleware, adminMiddleware);
 router.get('/documents', DocumentController.listAll);
 router.post('/documents/upload', handleUpload, DocumentController.upload);
 router.get('/documents/:id', DocumentController.getById);
+router.get('/documents/:id/file', DocumentController.getFile);
 router.delete('/documents/:id', DocumentController.delete);
 router.get('/stats', DocumentController.getStats);
 

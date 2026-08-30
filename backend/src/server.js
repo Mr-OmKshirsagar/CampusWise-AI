@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 
 import { env } from './config/env.js';
 import { initDb, getDbAdapter } from './config/db.js';
+import { DocumentService } from './services/documentService.js';
 import authRoutes from './routes/authRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
@@ -66,7 +67,7 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-// Static files for uploads & sample files (with cross-origin embed headers)
+// Static files for uploads & sample files (with cross-origin embed headers & Database sync fallback)
 app.use(
   '/uploads',
   (req, res, next) => {
@@ -75,7 +76,21 @@ app.use(
     next();
   },
   express.static(path.resolve(__dirname, '../uploads')),
-  express.static(path.resolve(__dirname, '../sample_data'))
+  express.static(path.resolve(__dirname, '../sample_data')),
+  async (req, res, next) => {
+    try {
+      const filename = path.basename(req.path || '');
+      if (filename && filename.length > 0) {
+        const fileInfo = await DocumentService.getDocumentFile(filename);
+        res.setHeader('Content-Type', fileInfo.mimeType);
+        res.setHeader('Content-Disposition', `inline; filename="${fileInfo.filename}"`);
+        return res.send(fileInfo.buffer);
+      }
+    } catch (err) {
+      // If not in database either, pass to 404 handler
+    }
+    next();
+  }
 );
 
 // Rate Limiters

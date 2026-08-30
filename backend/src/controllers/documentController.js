@@ -112,4 +112,24 @@ export class DocumentController {
       });
     }
   }
+
+  /**
+   * GET /api/admin/documents/:id/file
+   */
+  static async getFile(req, res, next) {
+    try {
+      const fileData = await DocumentService.getDocumentFile(req.params.id);
+      res.setHeader('Content-Type', fileData.mimeType);
+      res.setHeader('Content-Disposition', `inline; filename="${fileData.filename}"`);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      return res.send(fileData.buffer);
+    } catch (err) {
+      const statusCode = err.statusCode || 404;
+      return res.status(statusCode).json({
+        success: false,
+        error: err.message || 'File not found.',
+      });
+    }
+  }
 }

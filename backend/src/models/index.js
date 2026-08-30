@@ -1,3 +1,4 @@
+import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import {
   getDbAdapter,
@@ -113,7 +114,7 @@ export const UserModel = {
 // 2. Document Model
 // ==========================================
 export const DocumentModel = {
-  async create({ title, filename, file_url, category = 'General', file_size = 0, chunk_count = 0, uploaded_by }) {
+  async create({ title, filename, file_url, file_data = null, category = 'General', file_size = 0, chunk_count = 0, uploaded_by }) {
     const adapter = getDbAdapter();
     const id = uuidv4();
     const createdAt = new Date().toISOString();
@@ -125,10 +126,10 @@ export const DocumentModel = {
     if (adapter === 'postgres') {
       const pool = getPgPool();
       const res = await pool.query(
-        `INSERT INTO documents (id, title, filename, file_url, category, file_size, chunk_count, uploaded_by, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-         RETURNING *`,
-        [id, cleanTitle, cleanFilename, cleanFileUrl, cleanCategory, file_size, chunk_count, uploaded_by, createdAt]
+        `INSERT INTO documents (id, title, filename, file_url, file_data, category, file_size, chunk_count, uploaded_by, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING id, title, filename, file_url, category, file_size, chunk_count, uploaded_by, created_at`,
+        [id, cleanTitle, cleanFilename, cleanFileUrl, file_data, cleanCategory, file_size, chunk_count, uploaded_by, createdAt]
       );
       return res.rows[0];
     }
@@ -139,6 +140,7 @@ export const DocumentModel = {
       title: cleanTitle,
       filename: cleanFilename,
       file_url: cleanFileUrl,
+      file_data,
       category: cleanCategory,
       file_size,
       chunk_count,
@@ -147,7 +149,8 @@ export const DocumentModel = {
     };
     store.documents.push(newDoc);
     persistLocalStore();
-    return newDoc;
+    const { file_data: _, ...savedMeta } = newDoc;
+    return savedMeta;
   },
 
   async findAll() {
@@ -155,7 +158,7 @@ export const DocumentModel = {
     if (adapter === 'postgres') {
       const pool = getPgPool();
       const res = await pool.query(
-        `SELECT d.*, u.name as uploader_name
+        `SELECT d.id, d.title, d.filename, d.file_url, d.category, d.file_size, d.chunk_count, d.uploaded_by, d.created_at, u.name as uploader_name
          FROM documents d
          LEFT JOIN users u ON u.id = d.uploaded_by
          ORDER BY d.created_at DESC`
@@ -165,14 +168,47 @@ export const DocumentModel = {
     const store = getMemoryStore();
     return store.documents.map(doc => {
       const uploader = store.users.find(u => u.id === doc.uploaded_by);
+      const { file_data, ...docMeta } = doc;
       return {
-        ...doc,
+        ...docMeta,
         uploader_name: uploader ? uploader.name : 'Admin',
       };
     });
   },
 
   async findById(id) {
+    const adapter = getDbAdapter();
+    if (adapter === 'postgres') {
+      const pool = getPgPool();
+      const res = await pool.query(
+        'SELECT id, title, filename, file_url, category, file_size, chunk_count, uploaded_by, created_at FROM documents WHERE id = $1',
+        [id]
+      );
+      return res.rows[0] || null;
+    }
+    const store = getMemoryStore();
+    const doc = store.documents.find(d => d.id === id);
+    if (!doc) return null;
+    const { file_data, ...docMeta } = doc;
+    return docMeta;
+  },
+
+  async findByFilename(filename) {
+    const adapter = getDbAdapter();
+    const cleanFilename = path.basename(filename || '');
+    if (adapter === 'postgres') {
+      const pool = getPgPool();
+      const res = await pool.query(
+        'SELECT id, title, filename, file_url, file_data, category, file_size FROM documents WHERE filename = $1 OR file_url LIKE $2 LIMIT 1',
+        [cleanFilename, `%${cleanFilename}`]
+      );
+      return res.rows[0] || null;
+    }
+    const store = getMemoryStore();
+    return store.documents.find(d => d.filename === cleanFilename || (d.file_url && d.file_url.includes(cleanFilename))) || null;
+  },
+
+  async findByIdWithFile(id) {
     const adapter = getDbAdapter();
     if (adapter === 'postgres') {
       const pool = getPgPool();
