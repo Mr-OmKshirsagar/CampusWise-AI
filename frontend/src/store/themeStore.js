@@ -7,8 +7,13 @@ const getInitialTheme = () => {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
+// Global animation lock to prevent Chromium GPU compositor crashes (STATUS_BREAKPOINT)
+let isTransitionInProgress = false;
+let currentWebAnimation = null;
+
 export const useThemeStore = create((set, get) => ({
   theme: getInitialTheme(),
+  isTransitioning: false,
 
   initTheme: () => {
     const current = get().theme;
@@ -35,7 +40,12 @@ export const useThemeStore = create((set, get) => ({
     }
   },
 
-  toggleTheme: () => {
+  toggleTheme: async () => {
+    // 🛡️ Prevent overlapping transition collisions that trigger Chromium STATUS_BREAKPOINT
+    if (isTransitionInProgress) return;
+    isTransitionInProgress = true;
+    set({ isTransitioning: true });
+
     const nextTheme = get().theme === 'dark' ? 'light' : 'dark';
     localStorage.setItem('campuswise_theme', nextTheme);
 
@@ -53,45 +63,65 @@ export const useThemeStore = create((set, get) => ({
 
     // Check if View Transition API is supported
     if (typeof document !== 'undefined' && document.startViewTransition) {
-      // Calculate full canvas dimensions (including scroll heights & DPR)
-      const doc = document.documentElement;
-      const width = Math.max(window.innerWidth || 0, doc.clientWidth || 0, doc.scrollWidth || 0);
-      const height = Math.max(window.innerHeight || 0, doc.clientHeight || 0, doc.scrollHeight || 0);
+      try {
+        // Cancel any lingering animation safely
+        if (currentWebAnimation) {
+          try {
+            currentWebAnimation.cancel();
+          } catch (_) { }
+          currentWebAnimation = null;
+        }
 
-      // Distance from top-center (50% 0%) to bottom corners with 1.5x safe overscan
-      const maxDistance = Math.hypot(width / 2, height);
-      const endRadius = Math.ceil(maxDistance * 1.5);
+        const doc = document.documentElement;
+        const width = Math.max(window.innerWidth || 0, doc.clientWidth || 0, doc.scrollWidth || 0);
+        const height = Math.max(window.innerHeight || 0, doc.clientHeight || 0, doc.scrollHeight || 0);
+        const maxDistance = Math.hypot(width / 2, height);
+        const endRadius = Math.ceil(maxDistance * 1.5);
 
-      const transition = document.startViewTransition(() => {
-        applyTheme();
-      });
+        const transition = document.startViewTransition(() => {
+          applyTheme();
+        });
 
-      transition.ready.then(() => {
-        // Origin strictly anchored to the top-center midpoint (50% 0%)
+        await transition.ready.catch(() => { });
+
         const clipPath = [
           'circle(0px at 50% 0%)',
           `circle(${endRadius}px at 50% 0%)`,
         ];
 
-        // Animate incoming theme radiating symmetrically with 100% full-canvas coverage
-        document.documentElement.animate(
+        currentWebAnimation = document.documentElement.animate(
           {
             clipPath: clipPath,
           },
           {
-            duration: 1600,
+            duration: 3500,
             easing: 'linear',
             fill: 'forwards',
             pseudoElement: '::view-transition-new(root)',
           }
         );
-      });
+
+        await currentWebAnimation.finished.catch(() => { });
+        await transition.finished.catch(() => { });
+      } catch (err) {
+        applyTheme();
+      } finally {
+        currentWebAnimation = null;
+        isTransitionInProgress = false;
+        set({ isTransitioning: false });
+      }
     } else {
       applyTheme();
+      isTransitionInProgress = false;
+      set({ isTransitioning: false });
     }
   },
 
-  setTheme: (theme) => {
+  setTheme: async (theme) => {
+    if (isTransitionInProgress) return;
+    isTransitionInProgress = true;
+    set({ isTransitioning: true });
+
     localStorage.setItem('campuswise_theme', theme);
 
     const applyTheme = () => {
@@ -107,36 +137,56 @@ export const useThemeStore = create((set, get) => ({
     };
 
     if (typeof document !== 'undefined' && document.startViewTransition) {
-      const doc = document.documentElement;
-      const width = Math.max(window.innerWidth || 0, doc.clientWidth || 0, doc.scrollWidth || 0);
-      const height = Math.max(window.innerHeight || 0, doc.clientHeight || 0, doc.scrollHeight || 0);
-      const maxDistance = Math.hypot(width / 2, height);
-      const endRadius = Math.ceil(maxDistance * 1.5);
+      try {
+        if (currentWebAnimation) {
+          try {
+            currentWebAnimation.cancel();
+          } catch (_) { }
+          currentWebAnimation = null;
+        }
 
-      const transition = document.startViewTransition(() => {
-        applyTheme();
-      });
+        const doc = document.documentElement;
+        const width = Math.max(window.innerWidth || 0, doc.clientWidth || 0, doc.scrollWidth || 0);
+        const height = Math.max(window.innerHeight || 0, doc.clientHeight || 0, doc.scrollHeight || 0);
+        const maxDistance = Math.hypot(width / 2, height);
+        const endRadius = Math.ceil(maxDistance * 1.5);
 
-      transition.ready.then(() => {
+        const transition = document.startViewTransition(() => {
+          applyTheme();
+        });
+
+        await transition.ready.catch(() => { });
+
         const clipPath = [
           'circle(0px at 50% 0%)',
           `circle(${endRadius}px at 50% 0%)`,
         ];
 
-        document.documentElement.animate(
+        currentWebAnimation = document.documentElement.animate(
           {
             clipPath: clipPath,
           },
           {
-            duration: 1600,
+            duration: 800,
             easing: 'linear',
             fill: 'forwards',
             pseudoElement: '::view-transition-new(root)',
           }
         );
-      });
+
+        await currentWebAnimation.finished.catch(() => { });
+        await transition.finished.catch(() => { });
+      } catch (err) {
+        applyTheme();
+      } finally {
+        currentWebAnimation = null;
+        isTransitionInProgress = false;
+        set({ isTransitioning: false });
+      }
     } else {
       applyTheme();
+      isTransitionInProgress = false;
+      set({ isTransitioning: false });
     }
   },
 }));

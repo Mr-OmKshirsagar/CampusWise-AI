@@ -3,14 +3,17 @@ import { Sun, Moon } from 'lucide-react';
 import { useThemeStore } from '../../store/themeStore.js';
 
 export default function ThemeToggle({ className = '', showLabel = false }) {
-  const { theme, toggleTheme } = useThemeStore();
+  const { theme, toggleTheme, isTransitioning } = useThemeStore();
   const isDark = theme === 'dark';
 
   return (
     <button
       type="button"
+      disabled={isTransitioning}
       onClick={(e) => toggleTheme(e)}
-      className={`relative inline-flex items-center gap-2 p-2 sm:px-2.5 sm:py-1.5 rounded-2xl glass-badge hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white active:scale-95 border border-slate-300/60 dark:border-white/10 shadow-sm ${className}`}
+      className={`relative inline-flex items-center gap-2 p-2 sm:px-2.5 sm:py-1.5 rounded-2xl glass-badge hover:bg-black/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white active:scale-95 border border-slate-300/60 dark:border-white/10 shadow-sm ${
+        isTransitioning ? 'cursor-wait pointer-events-none opacity-80' : ''
+      } ${className}`}
       title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
       aria-label="Toggle Theme"
     >
