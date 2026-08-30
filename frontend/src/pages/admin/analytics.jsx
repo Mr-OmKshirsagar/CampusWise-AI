@@ -126,7 +126,7 @@ export default function AdminAnalyticsPage() {
             </div>
             <div className="flex justify-between text-xs py-1 border-b border-slate-200/80 dark:border-white/[0.06]">
               <span className="text-slate-500 dark:text-slate-400">LLM Inference Mode</span>
-              <span className="font-mono text-sky-600 dark:text-sky-400 font-bold">Gemini 2.0 Flash / OpenAI</span>
+              <span className="font-mono text-sky-600 dark:text-sky-400 font-bold">Gemini 3.5 Flash-Lite / Grok / OpenAI</span>
             </div>
             <div className="flex justify-between text-xs py-1">
               <span className="text-slate-500 dark:text-slate-400">Source Citations</span>

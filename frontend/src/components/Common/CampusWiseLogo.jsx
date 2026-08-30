@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function CampusWiseLogo({ size = 'md', showText = true, badgeText = 'RAG v2.0' }) {
+export default function CampusWiseLogo({ size = 'md', showText = true, badgeText = 'RAG v1.1' }) {
   const sizeMap = {
     sm: { box: 'w-8 h-8 rounded-xl', icon: 'w-4 h-4', text: 'text-base', sub: 'text-[9px]' },
     md: { box: 'w-10 h-10 rounded-2xl', icon: 'w-5 h-5', text: 'text-lg', sub: 'text-[10px]' },
