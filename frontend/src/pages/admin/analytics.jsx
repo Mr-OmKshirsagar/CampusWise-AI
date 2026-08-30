@@ -16,7 +16,7 @@ export default function AdminAnalyticsPage() {
   const categoryBreakdown = stats?.categories ? Object.entries(stats.categories) : [];
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
+    <div className="min-h-[calc(100dvh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2">

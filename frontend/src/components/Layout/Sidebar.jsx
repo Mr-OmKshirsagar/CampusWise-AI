@@ -178,69 +178,68 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
         </div>
       )}
 
-      {/* Sidebar Header: New Chat & Toggle */}
-      <div className="p-3 border-b border-white/[0.08] flex items-center justify-between gap-2 bg-white/[0.02]">
+      {/* Sidebar Header with New Chat Button */}
+      <div className="p-3.5 border-b border-white/[0.08] flex items-center justify-between gap-2">
         <button
           onClick={handleNewChat}
-          className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-glow-blue transition-all active:scale-95"
+          className={`flex items-center justify-center gap-2 py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-glow-blue transition-all hover:scale-105 active:scale-95 ${
+            isCollapsed && !isMobileOpen ? 'w-full px-0' : 'flex-1'
+          }`}
+          title="Start New Conversation"
         >
           <MessageSquarePlus className="w-4 h-4 shrink-0" />
-          <span>New Conversation</span>
-        </button>
-
-        {/* Desktop Collapse Toggle */}
-        <button
-          onClick={onToggle}
-          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          className="hidden md:flex p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/[0.1] transition-all"
-        >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          {(!isCollapsed || isMobileOpen) && <span>New Inquiry</span>}
         </button>
 
         {/* Mobile Close Button */}
-        {onCloseMobile && (
+        {isMobileOpen && (
           <button
             onClick={onCloseMobile}
             title="Close sidebar"
-            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all"
+            className="md:hidden p-2 rounded-xl glass-badge text-slate-400 hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         )}
+
+        {/* Desktop Collapse Toggle */}
+        {!isMobileOpen && onToggle && (
+          <button
+            onClick={onToggle}
+            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            className="hidden md:flex p-2 rounded-xl glass-badge text-slate-400 hover:text-white transition-colors"
+          >
+            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+        )}
       </div>
 
-      {/* Search Bar */}
-      <div className="p-3 border-b border-white/[0.06]">
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search chat history..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full glass-input rounded-xl pl-8 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 transition-all"
-          />
+      {/* Search Threads Bar */}
+      {(!isCollapsed || isMobileOpen) && (
+        <div className="p-3 border-b border-white/[0.08]">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search conversation history..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full glass-input rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 transition-all"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Conversation Thread List */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1.5 no-scrollbar">
         {isLoadingConversations ? (
-          <div className="p-4 space-y-2.5">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-11 glass-card rounded-xl animate-pulse" />
-            ))}
+          <div className="p-4 text-center text-xs text-slate-500">
+            Loading conversations...
           </div>
         ) : filteredConversations.length === 0 ? (
-          !isCollapsed && (
-            <div className="text-center py-10 px-4 text-xs text-slate-400">
-              <div className="w-10 h-10 rounded-2xl glass-icon-box flex items-center justify-center mx-auto mb-3">
-                <MessageSquare className="w-5 h-5 text-slate-500" />
-              </div>
-              <p className="font-medium text-slate-300">No conversations yet.</p>
-              <p className="mt-1 text-[11px] text-slate-500">Ask any question to start a grounded RAG session.</p>
-            </div>
-          )
+          <div className="p-4 text-center text-xs text-slate-500">
+            {searchQuery ? 'No matching threads.' : 'No conversations yet.'}
+          </div>
         ) : (
           filteredConversations.map((conv) => {
             const isActive = currentConversationId === conv.id || params.id === conv.id;
@@ -293,18 +292,18 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
                     </div>
 
                     {(!isCollapsed || isMobileOpen) && (
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => handleStartRename(e, conv)}
                           title="Rename chat"
-                          className="p-1 text-slate-400 hover:text-sky-400 hover:bg-white/[0.08] rounded-lg transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-sky-400 hover:bg-white/[0.08] rounded-lg transition-colors"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => handleDelete(e, conv.id)}
                           title="Delete chat"
-                          className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+                          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
