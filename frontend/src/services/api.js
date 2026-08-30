@@ -5,6 +5,25 @@ if (rawBaseUrl.startsWith('http') && !rawBaseUrl.endsWith('/api')) {
   rawBaseUrl = `${rawBaseUrl}/api`;
 }
 
+// Get backend root URL (e.g., https://campuswise-api.onrender.com)
+export const getBackendBaseUrl = () => {
+  if (rawBaseUrl.startsWith('http')) {
+    return rawBaseUrl.replace(/\/api\/?$/, '');
+  }
+  return '';
+};
+
+// Resolve full file URL whether relative (/uploads/...) or absolute
+export const getFileUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:') || url.startsWith('data:')) {
+    return url;
+  }
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  const backendBase = getBackendBaseUrl();
+  return `${backendBase}${cleanPath}`;
+};
+
 const api = axios.create({
   baseURL: rawBaseUrl,
   headers: {

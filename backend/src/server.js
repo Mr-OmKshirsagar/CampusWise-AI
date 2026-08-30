@@ -23,6 +23,7 @@ app.use(
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: false,
+    frameguard: false,
   })
 );
 
@@ -65,8 +66,17 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-// Static files for uploads if needed
-app.use('/uploads', express.static(path.resolve(__dirname, '../uploads')));
+// Static files for uploads & sample files (with cross-origin embed headers)
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(path.resolve(__dirname, '../uploads')),
+  express.static(path.resolve(__dirname, '../sample_data'))
+);
 
 // Rate Limiters
 const authLimiter = rateLimit({

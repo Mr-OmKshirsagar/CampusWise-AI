@@ -19,7 +19,7 @@ import {
   FileCode,
   Sparkles,
 } from 'lucide-react';
-import { documentApi } from '../../services/api.js';
+import { documentApi, getFileUrl } from '../../services/api.js';
 
 export default function DocumentViewerModal({ documentId, onClose }) {
   const [documentData, setDocumentData] = useState(null);
@@ -67,11 +67,7 @@ export default function DocumentViewerModal({ documentId, onClose }) {
     doc.filename?.match(/\.(png|jpe?g|webp|gif|bmp)$/i) ||
     doc.file_url?.match(/\.(png|jpe?g|webp|gif|bmp)$/i);
 
-  const fileUrl = doc.file_url
-    ? doc.file_url.startsWith('http')
-      ? doc.file_url
-      : doc.file_url
-    : '';
+  const fileUrl = doc.file_url ? getFileUrl(doc.file_url) : '';
 
   const handleCopyChunk = (chunkId, text) => {
     navigator.clipboard.writeText(text);
