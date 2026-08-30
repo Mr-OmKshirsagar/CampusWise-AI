@@ -12,11 +12,12 @@ import {
   ChevronRight,
   Clock,
   Sparkles,
+  Bot,
 } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore.js';
 
-const MIN_SIDEBAR_WIDTH = 260; // Minimum fixed width in expanded mode
-const MAX_SIDEBAR_WIDTH = 480; // Maximum allowed length/width in expanded mode
+const MIN_SIDEBAR_WIDTH = 260;
+const MAX_SIDEBAR_WIDTH = 480;
 const DEFAULT_SIDEBAR_WIDTH = 300;
 
 export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMobile }) {
@@ -173,17 +174,17 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
           title="Drag to resize sidebar width"
           className="hidden md:block absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:w-2 hover:bg-sky-500/50 active:bg-sky-400 transition-all z-40 group select-none"
         >
-          <div className={`w-full h-full ${isResizing ? 'bg-sky-400' : 'group-hover:bg-sky-500/60'}`} />
+          <div className={`w-full h-full ${isResizing ? 'bg-sky-400 shadow-glow-blue' : 'group-hover:bg-sky-500/60'}`} />
         </div>
       )}
 
       {/* Sidebar Header: New Chat & Toggle */}
-      <div className="p-3 border-b border-slate-800/80 flex items-center justify-between gap-2">
+      <div className="p-3 border-b border-white/[0.08] flex items-center justify-between gap-2 bg-white/[0.02]">
         <button
           onClick={handleNewChat}
-          className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-campus-600 hover:from-sky-500 hover:to-campus-500 text-white font-medium text-xs shadow-md shadow-sky-600/20 transition-all"
+          className="flex-1 flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-glow-blue transition-all active:scale-95"
         >
-          <MessageSquarePlus className="w-4 h-4" />
+          <MessageSquarePlus className="w-4 h-4 shrink-0" />
           <span>New Conversation</span>
         </button>
 
@@ -191,7 +192,7 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
         <button
           onClick={onToggle}
           title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          className="hidden md:flex p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+          className="hidden md:flex p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-white/[0.1] transition-all"
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
@@ -201,7 +202,7 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
           <button
             onClick={onCloseMobile}
             title="Close sidebar"
-            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+            className="md:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -209,7 +210,7 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
       </div>
 
       {/* Search Bar */}
-      <div className="p-3 border-b border-slate-800/60">
+      <div className="p-3 border-b border-white/[0.06]">
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
           <input
@@ -217,24 +218,27 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
             placeholder="Search chat history..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-slate-900/90 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+            className="w-full glass-input rounded-xl pl-8 pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 transition-all"
           />
         </div>
       </div>
+
       {/* Conversation Thread List */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1">
+      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 no-scrollbar">
         {isLoadingConversations ? (
-          <div className="p-4 space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-10 bg-slate-900/60 rounded-lg animate-pulse" />
+          <div className="p-4 space-y-2.5">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-11 glass-card rounded-xl animate-pulse" />
             ))}
           </div>
         ) : filteredConversations.length === 0 ? (
           !isCollapsed && (
-            <div className="text-center py-8 px-4 text-xs text-slate-500">
-              <MessageSquare className="w-8 h-8 mx-auto text-slate-600 mb-2 opacity-50" />
-              <p>No conversations yet.</p>
-              <p className="mt-1 text-[11px]">Start a new chat to ask about college policies.</p>
+            <div className="text-center py-10 px-4 text-xs text-slate-400">
+              <div className="w-10 h-10 rounded-2xl glass-icon-box flex items-center justify-center mx-auto mb-3">
+                <MessageSquare className="w-5 h-5 text-slate-500" />
+              </div>
+              <p className="font-medium text-slate-300">No conversations yet.</p>
+              <p className="mt-1 text-[11px] text-slate-500">Ask any question to start a grounded RAG session.</p>
             </div>
           )
         ) : (
@@ -248,8 +252,8 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
                 onClick={() => handleSelect(conv.id)}
                 className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer text-xs font-medium transition-all ${
                   isActive
-                    ? 'bg-sky-500/15 text-sky-300 border border-sky-500/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent'
+                    ? 'bg-sky-500/20 text-sky-200 border border-sky-500/40 shadow-glow-blue'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.05] border border-transparent'
                 }`}
               >
                 {isEditing ? (
@@ -260,19 +264,19 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
                       onKeyDown={(e) => handleKeyDown(e, conv.id)}
-                      className="flex-1 bg-slate-900 border border-sky-500 rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
+                      className="flex-1 glass-input rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
                     />
                     <button
                       onClick={(e) => handleSaveRename(e, conv.id)}
                       title="Save title (Enter)"
-                      className="p-1 rounded bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 transition-colors"
+                      className="p-1 rounded-lg bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 transition-colors"
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={handleCancelRename}
                       title="Cancel (Esc)"
-                      className="p-1 rounded bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors"
+                      className="p-1 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -280,25 +284,27 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
                 ) : (
                   <>
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <MessageSquare className={`w-4 h-4 shrink-0 ${isActive ? 'text-sky-400' : 'text-slate-500'}`} />
+                      <div className={`p-1.5 rounded-lg ${isActive ? 'bg-sky-500/20 text-sky-400' : 'bg-white/[0.04] text-slate-500 group-hover:text-slate-300'} transition-colors`}>
+                        <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                      </div>
                       {(!isCollapsed || isMobileOpen) && (
                         <span className="truncate">{conv.title || 'Untitled Conversation'}</span>
                       )}
                     </div>
 
                     {(!isCollapsed || isMobileOpen) && (
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => handleStartRename(e, conv)}
                           title="Rename chat"
-                          className="p-1 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded transition-colors"
+                          className="p-1 text-slate-400 hover:text-sky-400 hover:bg-white/[0.08] rounded-lg transition-colors"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => handleDelete(e, conv.id)}
                           title="Delete chat"
-                          className="p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition-colors"
+                          className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -314,12 +320,12 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
 
       {/* Footer Info */}
       {(!isCollapsed || isMobileOpen) && (
-        <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 text-[11px] text-slate-500 flex items-center justify-between">
+        <div className="p-3 border-t border-white/[0.08] bg-[#05070a]/60 text-[11px] text-slate-400 flex items-center justify-between">
           <span className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-            Grounded RAG Store
+            <span>Grounded RAG Store</span>
           </span>
-          <span>{conversations.length} threads</span>
+          <span className="glass-badge px-2 py-0.5 rounded-full text-[10px] font-mono">{conversations.length} threads</span>
         </div>
       )}
     </>
@@ -335,7 +341,7 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
           minWidth: isCollapsed ? '4rem' : `${MIN_SIDEBAR_WIDTH}px`,
           maxWidth: isCollapsed ? '4rem' : `${MAX_SIDEBAR_WIDTH}px`,
         }}
-        className={`hidden md:flex relative border-r border-slate-800/80 bg-slate-950/70 flex-col z-30 shrink-0 ${
+        className={`hidden md:flex relative border-r border-white/[0.08] glass-panel bg-[#05070a]/70 flex-col z-30 shrink-0 ${
           isResizing ? '' : 'transition-[width] duration-200'
         }`}
       >
@@ -347,12 +353,12 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
         <div className="md:hidden fixed inset-0 z-50 flex">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 bg-[#05070a]/80 backdrop-blur-md animate-fade-in"
             onClick={onCloseMobile}
           />
 
           {/* Drawer Panel */}
-          <div className="relative w-4/5 max-w-xs h-full bg-slate-950 border-r border-slate-800 shadow-2xl flex flex-col z-10 animate-slide-right">
+          <div className="relative w-4/5 max-w-xs h-full bg-[#090d16] border-r border-white/[0.1] shadow-2xl flex flex-col z-10 animate-slide-in-right">
             {sidebarContent}
           </div>
         </div>
@@ -360,3 +366,4 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
     </>
   );
 }
+

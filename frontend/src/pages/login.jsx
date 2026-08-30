@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Bot, Lock, Mail, ArrowRight, AlertCircle, Loader2, CheckCircle2, Shield } from 'lucide-react';
+import { Bot, Lock, Mail, ArrowRight, AlertCircle, Loader2, CheckCircle2, Shield, Sparkles, KeyRound } from 'lucide-react';
 import { useAuthStore } from '../store/authStore.js';
 
 export default function LoginPage() {
@@ -28,55 +28,61 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6 relative">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6 relative bg-ambient-mesh selection:bg-sky-500 selection:text-white overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-sky-500/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="w-full max-w-md space-y-6 relative z-10 animate-slide-up">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-campus-500 p-0.5 shadow-xl shadow-sky-500/20 mx-auto">
-            <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-              <Bot className="w-6 h-6 text-sky-400" />
-            </div>
+        <div className="text-center space-y-3">
+          <div className="w-14 h-14 rounded-2xl glass-icon-box flex items-center justify-center mx-auto shadow-glow-blue">
+            <Bot className="w-7 h-7 text-sky-400" />
           </div>
-          <h2 className="font-display text-2xl font-bold text-white tracking-tight">Sign In to CampusWise AI</h2>
-          <p className="text-xs text-slate-400">Access official college assistant and document knowledge base</p>
+          <div>
+            <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Sign In to CampusWise <span className="bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">AI</span>
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">Access verified college documents and grounded assistant</p>
+          </div>
         </div>
 
         {/* Login Card */}
-        <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800 space-y-6 shadow-2xl">
+        <div className="glass-panel-elevated p-6 sm:p-8 rounded-3xl border border-white/[0.12] space-y-6 shadow-glass-lg">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-300 flex items-center gap-2.5 animate-shake">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
                 <span>{error}</span>
               </div>
             )}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">College Email</label>
+              <label className="text-xs font-semibold text-slate-300 tracking-wide">College Email</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="student@campus.edu"
                   required
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+                  className="w-full glass-input rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 transition-all"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300">Password</label>
+              <label className="text-xs font-semibold text-slate-300 tracking-wide">Password</label>
               <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+                <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+                  className="w-full glass-input rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 transition-all"
                 />
               </div>
             </div>
@@ -84,13 +90,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-campus-600 hover:from-sky-500 hover:to-campus-500 text-white font-semibold text-xs shadow-lg shadow-sky-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-glow-blue flex items-center justify-center gap-2 transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Sign In to Portal</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -98,22 +104,27 @@ export default function LoginPage() {
           </form>
 
           {/* Quick Demo Fill Buttons for Testing */}
-          <div className="pt-4 border-t border-slate-800/80 space-y-2">
-            <p className="text-[11px] text-slate-400 font-medium text-center">Quick Demo Credentials:</p>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="pt-4 border-t border-white/[0.08] space-y-2.5">
+            <p className="text-[11px] text-slate-400 font-semibold text-center flex items-center justify-center gap-1.5">
+              <KeyRound className="w-3.5 h-3.5 text-sky-400" />
+              <span>One-Click Demo Accounts:</span>
+            </p>
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => { setEmail('admin@campus.edu'); setPassword('AdminPassword123!'); }}
-                className="p-2 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 text-center transition-colors"
+                className="p-2.5 rounded-xl glass-card text-[11px] font-semibold text-amber-300 border-amber-500/20 hover:border-amber-500/40 text-center transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5"
               >
-                Fill Admin
+                <Shield className="w-3.5 h-3.5" />
+                <span>Fill Admin</span>
               </button>
               <button
                 type="button"
                 onClick={() => { setEmail('student@campus.edu'); setPassword('StudentPassword123!'); }}
-                className="p-2 rounded-lg bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-[11px] text-slate-300 text-center transition-colors"
+                className="p-2.5 rounded-xl glass-card text-[11px] font-semibold text-sky-300 border-sky-500/20 hover:border-sky-500/40 text-center transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-1.5"
               >
-                Fill Student
+                <Bot className="w-3.5 h-3.5" />
+                <span>Fill Student</span>
               </button>
             </div>
           </div>
@@ -121,8 +132,8 @@ export default function LoginPage() {
 
         {/* Footer Link */}
         <p className="text-center text-xs text-slate-400">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-sky-400 hover:underline font-semibold">
+          Don't have an account yet?{' '}
+          <Link to="/register" className="text-sky-400 hover:text-sky-300 underline font-semibold transition-colors">
             Register as Student
           </Link>
         </p>
@@ -130,3 +141,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
