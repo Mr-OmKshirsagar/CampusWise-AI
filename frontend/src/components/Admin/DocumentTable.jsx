@@ -1,6 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Trash2, Search, Filter, Layers, HardDrive, Calendar, User, Eye, ChevronLeft, ChevronRight, Sparkles, Image as ImageIcon } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  FileText,
+  Trash2,
+  Search,
+  Filter,
+  Layers,
+  HardDrive,
+  Calendar,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Loader2,
+  CheckCircle2,
+} from 'lucide-react';
 import { documentApi } from '../../services/api.js';
+import GlassIcon from '../Common/GlassIcon.jsx';
 
 export default function DocumentTable({ documents = [], onDocumentDeleted, onSelectDocument }) {
   const [search, setSearch] = useState('');
@@ -11,14 +26,16 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
 
   const categories = ['All', ...new Set(documents.map((d) => d.category).filter(Boolean))];
 
-  const filteredDocs = documents.filter((doc) => {
-    const matchesSearch = (doc.title || '').toLowerCase().includes(search.toLowerCase()) ||
-                          (doc.filename || '').toLowerCase().includes(search.toLowerCase());
-    const matchesCat = selectedCategory === 'All' || doc.category === selectedCategory;
-    return matchesSearch && matchesCat;
-  });
+  const filteredDocs = useMemo(() => {
+    return documents.filter((doc) => {
+      const matchesSearch =
+        (doc.title || '').toLowerCase().includes(search.toLowerCase()) ||
+        (doc.filename || '').toLowerCase().includes(search.toLowerCase());
+      const matchesCat = selectedCategory === 'All' || doc.category === selectedCategory;
+      return matchesSearch && matchesCat;
+    });
+  }, [documents, search, selectedCategory]);
 
-  // Reset to first page when search query or category filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [search, selectedCategory]);
@@ -59,15 +76,19 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
     return map[category] || map.General;
   };
 
+  const isImageFile = (doc) =>
+    (doc.filename || '').match(/\.(png|jpe?g|webp)$/i) ||
+    (doc.file_url || '').match(/\.(png|jpe?g|webp)$/i);
+
   return (
     <div className="glass-panel-elevated rounded-3xl border border-white/[0.12] overflow-hidden space-y-4 shadow-glass-lg">
-      {/* Table Controls */}
+      {/* Table Top Controls & Search Bar */}
       <div className="p-4 sm:p-5 border-b border-white/[0.08] flex flex-col sm:flex-row gap-3 items-center justify-between bg-white/[0.02]">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Search indexed knowledge documents..."
+            placeholder="Search indexed documents..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full glass-input rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 transition-all"
@@ -82,7 +103,7 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 active:scale-95 ${
                 selectedCategory === cat
-                  ? 'bg-sky-500/20 text-sky-200 border border-sky-500/40 shadow-glow-blue scale-105'
+                  ? 'bg-sky-500/20 text-sky-200 border border-sky-500/40 shadow-glow-cyan scale-105'
                   : 'glass-badge text-slate-400 hover:text-white hover:bg-white/[0.08]'
               }`}
             >
@@ -95,79 +116,97 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
       {/* Desktop Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-[#05070a]/70 text-slate-400 uppercase tracking-widest font-bold border-b border-white/[0.08] text-[10px]">
+          <thead className="bg-[#030508]/80 text-slate-400 uppercase tracking-widest font-bold border-b border-white/[0.08] text-[10px]">
             <tr>
               <th className="px-6 py-4">Document Title</th>
               <th className="px-4 py-4">Category</th>
               <th className="px-4 py-4">Vector Chunks</th>
-              <th className="px-4 py-4">File Size</th>
-              <th className="px-4 py-4">Ingestion Date</th>
+              <th className="px-4 py-4">Size</th>
+              <th className="px-4 py-4">Uploaded</th>
               <th className="px-6 py-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.06]">
             {paginatedDocs.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center py-12 text-slate-400">
-                  <FileText className="w-9 h-9 mx-auto text-slate-500 mb-2 opacity-60" />
-                  <p className="font-semibold text-sm">No documents match your query.</p>
+                <td colSpan={6} className="text-center py-12 text-slate-400 text-xs">
+                  No indexed documents found matching your criteria.
                 </td>
               </tr>
             ) : (
               paginatedDocs.map((doc) => {
-                const isImage = doc.filename?.match(/\.(png|jpe?g|webp|gif|bmp)$/i);
+                const isImage = isImageFile(doc);
                 return (
-                  <tr key={doc.id} className="hover:bg-white/[0.03] transition-colors group">
+                  <tr
+                    key={doc.id}
+                    className="hover:bg-white/[0.03] transition-colors group"
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl glass-icon-box flex items-center justify-center ${isImage ? 'text-emerald-400' : 'text-sky-400'}`}>
-                          {isImage ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
-                        </div>
-                        <div
-                          className="cursor-pointer"
-                          onClick={() => onSelectDocument && onSelectDocument(doc.id)}
-                        >
-                          <p className="font-bold text-white group-hover:text-sky-300 transition-colors truncate max-w-[200px] sm:max-w-xs flex items-center gap-1.5 text-xs sm:text-sm">
-                            <span>{doc.title}</span>
-                          </p>
-                          <p className="text-[11px] text-slate-400 font-mono">{doc.filename}</p>
+                        <GlassIcon
+                          icon={isImage ? ImageIcon : FileText}
+                          variant={isImage ? 'emerald' : 'cyan'}
+                          size="xs"
+                        />
+                        <div className="min-w-0">
+                          <button
+                            onClick={() => onSelectDocument && onSelectDocument(doc.id)}
+                            className="font-bold text-white hover:text-sky-300 transition-colors truncate block max-w-xs text-left"
+                          >
+                            {doc.title}
+                          </button>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            {doc.filename}
+                          </span>
                         </div>
                       </div>
                     </td>
+
                     <td className="px-4 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${getCategoryColor(doc.category)}`}>
-                        {doc.category}
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getCategoryColor(
+                          doc.category
+                        )}`}
+                      >
+                        {doc.category || 'General'}
                       </span>
                     </td>
+
                     <td className="px-4 py-4">
-                      <span className="flex items-center gap-1.5 font-mono text-sky-400 font-bold">
+                      <div className="flex items-center gap-1.5 font-mono text-sky-400 font-bold">
                         <Layers className="w-3.5 h-3.5" />
-                        {doc.chunk_count} chunks
-                      </span>
+                        <span>{doc.chunk_count || 0} chunks</span>
+                      </div>
                     </td>
+
                     <td className="px-4 py-4 font-mono text-slate-400">
-                      {(doc.file_size / 1024).toFixed(1)} KB
+                      {doc.file_size ? `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB` : 'N/A'}
                     </td>
-                    <td className="px-4 py-4 text-slate-400 font-mono text-[11px]">
-                      {new Date(doc.created_at).toLocaleDateString()}
+
+                    <td className="px-4 py-4 text-slate-400">
+                      {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'Recent'}
                     </td>
+
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => onSelectDocument && onSelectDocument(doc.id)}
-                          title="View Document (Preview Mode)"
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 rounded-xl transition-all active:scale-95 shadow-sm"
+                          className="p-1.5 rounded-xl glass-badge text-slate-300 hover:text-white hover:border-sky-500/40 transition-all"
+                          title="Preview Document & Chunks"
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View</span>
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(doc.id, doc.title)}
                           disabled={deletingId === doc.id}
-                          title="Delete Document and Chunks"
-                          className="p-2 text-rose-400 hover:text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
+                          title="Delete Document"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          {deletingId === doc.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-rose-400" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </button>
                       </div>
                     </td>
@@ -179,61 +218,68 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
         </table>
       </div>
 
-      {/* Mobile Card List View */}
-      <div className="md:hidden divide-y divide-white/[0.08]">
+      {/* Mobile Responsive Cards */}
+      <div className="md:hidden p-3.5 space-y-3">
         {paginatedDocs.length === 0 ? (
-          <div className="text-center py-10 px-4 text-slate-400">
-            <FileText className="w-8 h-8 mx-auto text-slate-500 mb-2 opacity-60" />
-            <p className="text-xs">No documents match your query.</p>
+          <div className="text-center py-8 text-slate-400 text-xs">
+            No indexed documents found.
           </div>
         ) : (
           paginatedDocs.map((doc) => {
-            const isImage = doc.filename?.match(/\.(png|jpe?g|webp|gif|bmp)$/i);
+            const isImage = isImageFile(doc);
             return (
-              <div key={doc.id} className="p-4 space-y-3 hover:bg-white/[0.02] transition-colors">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-2.5 min-w-0">
-                    <div className={`w-8 h-8 rounded-xl glass-icon-box flex items-center justify-center shrink-0 mt-0.5 ${isImage ? 'text-emerald-400' : 'text-sky-400'}`}>
-                      {isImage ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
-                    </div>
+              <div
+                key={doc.id}
+                className="glass-card p-4 rounded-2xl space-y-3 border-white/[0.08]"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <GlassIcon
+                      icon={isImage ? ImageIcon : FileText}
+                      variant={isImage ? 'emerald' : 'cyan'}
+                      size="xs"
+                    />
                     <div className="min-w-0">
-                      <h4
-                        onClick={() => onSelectDocument && onSelectDocument(doc.id)}
-                        className="font-bold text-white text-xs truncate cursor-pointer hover:text-sky-300"
-                      >
-                        {doc.title}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 font-mono truncate">{doc.filename}</p>
+                      <h4 className="font-bold text-white text-xs truncate">{doc.title}</h4>
+                      <p className="text-[10px] text-slate-400 truncate">{doc.filename}</p>
                     </div>
                   </div>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${getCategoryColor(doc.category)}`}>
-                    {doc.category}
+
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border shrink-0 ${getCategoryColor(
+                      doc.category
+                    )}`}
+                  >
+                    {doc.category || 'General'}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-white/[0.06]">
-                  <span className="flex items-center gap-1 font-mono text-sky-400 font-bold">
-                    <Layers className="w-3 h-3" />
-                    {doc.chunk_count} chunks
+                  <span className="font-mono text-sky-400 font-bold">
+                    {doc.chunk_count || 0} chunks
                   </span>
-                  <span className="font-mono">{(doc.file_size / 1024).toFixed(1)} KB</span>
-                  <span className="font-mono">{new Date(doc.created_at).toLocaleDateString()}</span>
+                  <span>{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : ''}</span>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-1">
+                <div className="flex items-center gap-2 pt-1">
                   <button
                     onClick={() => onSelectDocument && onSelectDocument(doc.id)}
-                    className="flex-1 py-2 px-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                    className="flex-1 py-2 rounded-xl glass-badge text-xs font-semibold text-slate-200 hover:text-white flex items-center justify-center gap-1.5"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    <span>View Document</span>
+                    <span>Preview & Chunks</span>
                   </button>
+
                   <button
                     onClick={() => handleDelete(doc.id, doc.title)}
                     disabled={deletingId === doc.id}
-                    className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 transition-all active:scale-95 disabled:opacity-50"
+                    className="p-2 rounded-xl text-rose-400 hover:bg-rose-500/10 transition-colors"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {deletingId === doc.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -242,83 +288,34 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
         )}
       </div>
 
-      {/* Footer Info & Pagination Controls */}
-      <div className="p-4 sm:p-5 border-t border-white/[0.08] bg-white/[0.02] text-[11px] sm:text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-slate-400">
-          {filteredDocs.length > 0 ? (
-            <span>
-              Showing <strong className="text-white font-mono">{startIndex + 1}</strong> to <strong className="text-white font-mono">{endIndex}</strong> of <strong className="text-white font-mono">{filteredDocs.length}</strong> records
-            </span>
-          ) : (
-            <span>0 documents found</span>
-          )}
+      {/* Pagination Footer */}
+      <div className="p-4 sm:px-6 border-t border-white/[0.08] flex items-center justify-between text-xs text-slate-400 bg-white/[0.01]">
+        <div>
+          Showing <span className="font-bold text-white">{filteredDocs.length > 0 ? startIndex + 1 : 0}</span> to{' '}
+          <span className="font-bold text-white">{endIndex}</span> of{' '}
+          <span className="font-bold text-white">{filteredDocs.length}</span> documents
         </div>
 
-        {/* Pagination Navigation */}
-        {totalPages > 1 && (
-          <div className="flex items-center gap-1.5 self-center sm:self-auto">
-            {/* Previous Page Button */}
-            <button
-              type="button"
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={validCurrentPage === 1}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl glass-badge text-xs font-semibold text-slate-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
-            >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Previous</span>
-            </button>
-
-            {/* Page Numbers */}
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                if (
-                  totalPages > 7 &&
-                  pageNum !== 1 &&
-                  pageNum !== totalPages &&
-                  Math.abs(pageNum - validCurrentPage) > 1
-                ) {
-                  if (pageNum === 2 || pageNum === totalPages - 1) {
-                    return (
-                      <span key={pageNum} className="px-1 text-slate-500 font-mono">
-                        ...
-                      </span>
-                    );
-                  }
-                  return null;
-                }
-
-                const isActive = pageNum === validCurrentPage;
-                return (
-                  <button
-                    key={pageNum}
-                    type="button"
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`min-w-[32px] h-[32px] flex items-center justify-center rounded-xl text-xs font-mono font-bold transition-all active:scale-95 ${
-                      isActive
-                        ? 'bg-sky-500/20 text-sky-200 border border-sky-500/40 shadow-glow-blue scale-105'
-                        : 'glass-badge text-slate-400 hover:text-white hover:bg-white/[0.08]'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Next Page Button */}
-            <button
-              type="button"
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={validCurrentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-xl glass-badge text-xs font-semibold text-slate-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
-            >
-              <span className="hidden sm:inline">Next</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={validCurrentPage <= 1}
+            className="p-1.5 rounded-xl glass-badge hover:text-white disabled:opacity-40 transition-all"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="font-mono text-slate-300">
+            Page {validCurrentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={validCurrentPage >= totalPages}
+            className="p-1.5 rounded-xl glass-badge hover:text-white disabled:opacity-40 transition-all"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-

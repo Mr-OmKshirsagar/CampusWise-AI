@@ -1,11 +1,25 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Sparkles, MessageSquare, ShieldCheck, Loader2, Edit2, Trash2, Check, X, Zap } from 'lucide-react';
+import {
+  Bot,
+  Sparkles,
+  MessageSquare,
+  ShieldCheck,
+  Loader2,
+  Edit2,
+  Trash2,
+  Check,
+  X,
+  Zap,
+  ArrowDown,
+} from 'lucide-react';
 import { useChatStore } from '../../store/chatStore.js';
 import MessageBubble from './MessageBubble.jsx';
 import SuggestedQuestions from './SuggestedQuestions.jsx';
 import ChatInput from './ChatInput.jsx';
 import SourceDrawer from './SourceDrawer.jsx';
+import CampusWiseLogo from '../Common/CampusWiseLogo.jsx';
+import GlassIcon from '../Common/GlassIcon.jsx';
 
 export default function ChatContainer({ onOpenMobileSidebar }) {
   const {
@@ -17,21 +31,32 @@ export default function ChatContainer({ onOpenMobileSidebar }) {
     sendMessage,
     renameConversation,
     deleteConversation,
+    suggestedQuestions,
   } = useChatStore();
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
   const titleInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const navigate = useNavigate();
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToBottom('smooth');
   }, [messages, isSendingQuery, scrollToBottom]);
+
+  // Track scroll position to display floating scroll-to-bottom button
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const isUp = scrollHeight - scrollTop - clientHeight > 200;
+    setShowScrollBottom(isUp);
+  };
 
   useEffect(() => {
     if (isEditingTitle && titleInputRef.current) {
@@ -72,9 +97,9 @@ export default function ChatContainer({ onOpenMobileSidebar }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100dvh-4rem)] overflow-hidden bg-[#05070a]/60 relative bg-ambient-mesh selection:bg-sky-500 selection:text-white">
-      {/* Active Conversation Title Header */}
-      <div className="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-white/[0.08] glass-panel flex items-center justify-between z-10 bg-[#05070a]/80 backdrop-blur-xl">
+    <div className="flex-1 flex flex-col h-[calc(100dvh-4rem)] overflow-hidden bg-[#030508]/60 relative bg-ambient-mesh selection:bg-sky-500 selection:text-white">
+      {/* Active Conversation Title Top Bar */}
+      <div className="px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-white/[0.08] glass-panel flex items-center justify-between z-10 bg-[#070b12]/80 backdrop-blur-xl">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {onOpenMobileSidebar && (
             <button
@@ -86,9 +111,7 @@ export default function ChatContainer({ onOpenMobileSidebar }) {
             </button>
           )}
 
-          <div className="w-9 h-9 rounded-xl glass-icon-box flex items-center justify-center text-sky-400 shrink-0 hidden sm:flex shadow-glow-blue">
-            <Bot className="w-4 h-4" />
-          </div>
+          <GlassIcon icon={Bot} variant="cyan" size="xs" className="hidden sm:flex" />
 
           <div className="min-w-0">
             {isEditingTitle ? (
@@ -102,119 +125,111 @@ export default function ChatContainer({ onOpenMobileSidebar }) {
                     if (e.key === 'Enter') handleSaveRename();
                     if (e.key === 'Escape') setIsEditingTitle(false);
                   }}
-                  className="glass-input rounded-xl px-3 py-1 text-xs text-white focus:outline-none"
+                  className="bg-black/60 border border-sky-500/50 rounded-lg px-2 py-0.5 text-xs text-white focus:outline-none"
                 />
                 <button
                   onClick={handleSaveRename}
-                  title="Save title (Enter)"
-                  className="p-1.5 rounded-lg bg-sky-500/20 text-sky-400 hover:bg-sky-500/30 transition-colors"
+                  className="p-1 text-emerald-400 hover:bg-emerald-500/20 rounded"
                 >
                   <Check className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => setIsEditingTitle(false)}
-                  title="Cancel (Esc)"
-                  className="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:bg-slate-700 transition-colors"
+                  className="p-1 text-rose-400 hover:bg-rose-500/20 rounded"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 group">
-                <h2 className="text-xs sm:text-sm font-bold text-white truncate max-w-xs sm:max-w-md tracking-tight">
-                  {currentConversation ? currentConversation.title : 'Campus Knowledge Assistant'}
+              <div className="flex items-center gap-2">
+                <h2 className="font-display font-bold text-xs sm:text-sm text-white truncate max-w-[180px] sm:max-w-md">
+                  {currentConversation?.title || 'Campus Information Assistant'}
                 </h2>
-                {currentConversation && (
+                {currentConversationId && (
                   <button
                     onClick={handleStartRename}
-                    title="Rename conversation"
-                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-sky-400 hover:bg-white/[0.08] rounded-lg transition-all"
+                    className="text-slate-400 hover:text-white p-1 hover:bg-white/[0.08] rounded transition-colors"
+                    title="Rename thread"
                   >
                     <Edit2 className="w-3 h-3" />
                   </button>
                 )}
               </div>
             )}
-            <p className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              <span>Grounded RAG Engine • Anti-Hallucination Active</span>
+            <p className="text-[10px] text-slate-400 hidden sm:block">
+              Retrieval-Augmented Generation • Cosine Vector Matching Active
             </p>
           </div>
         </div>
 
-        {/* Header Action Buttons */}
-        {currentConversation && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleStartRename}
-              title="Rename conversation"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl glass-badge hover:bg-white/[0.08] text-xs font-semibold text-slate-300 hover:text-white transition-all active:scale-95"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Rename</span>
-            </button>
+        {/* Action Controls */}
+        <div className="flex items-center gap-2">
+          {currentConversationId && (
             <button
               onClick={handleDeleteConversation}
-              title="Delete conversation"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold text-rose-300 transition-all active:scale-95"
+              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+              title="Delete this conversation"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Delete</span>
+              <Trash2 className="w-4 h-4" />
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 no-scrollbar">
+      {/* Message Stream Area */}
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-5 no-scrollbar relative"
+      >
         {isLoadingMessages ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-9 h-9 border-2 border-sky-400 border-t-transparent rounded-full animate-spin shadow-glow-blue" />
-              <p className="text-xs text-slate-400 font-medium tracking-wide">Retrieving conversation context...</p>
-            </div>
+          <div className="flex flex-col items-center justify-center h-full space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-sky-400" />
+            <p className="text-xs text-slate-400 font-mono">Loading conversation history...</p>
           </div>
         ) : messages.length === 0 ? (
-          /* Empty State / Welcome Screen */
-          <div className="h-full flex flex-col items-center justify-center max-w-3xl mx-auto text-center space-y-6 py-6 animate-fade-in">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-3xl glass-icon-box flex items-center justify-center shadow-glow-blue">
-                <Bot className="w-8 h-8 text-sky-400 animate-pulse" />
+          /* Empty State Showcase */
+          <div className="flex flex-col items-center justify-center min-h-[75%] max-w-2xl mx-auto text-center space-y-6 sm:space-y-8 py-8 animate-fade-in">
+            <div className="space-y-3">
+              <div className="flex justify-center">
+                <CampusWiseLogo size="xl" showText={false} />
               </div>
-              <div className="absolute -top-1 -right-1 p-1.5 bg-emerald-500 rounded-full border-2 border-[#05070a] shadow-[0_0_8px_#10b981]" />
-            </div>
-
-            <div className="space-y-2">
-              <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                How can CampusWise help you today?
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
-                Ask about admissions, hostel curfews, exam schedules, or fee refund policies. Every answer is strictly extracted from official college circulars with citations.
+              <h3 className="font-display text-xl sm:text-3xl font-extrabold text-white tracking-tight">
+                How can CampusWise assist you today?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                Ask any question about examination schedules, refund policies, hostel curfews, or academic condonation. All answers cite official records.
               </p>
             </div>
 
-            {/* Suggested Question Chips */}
-            <SuggestedQuestions onSelectQuestion={handleSendMessage} />
+            {/* Suggested Starter Chips */}
+            <SuggestedQuestions
+              questions={suggestedQuestions}
+              onSelect={handleSendMessage}
+            />
           </div>
         ) : (
-          /* Render Message Bubbles */
-          <div className="max-w-4xl mx-auto space-y-4 gpu-layer">
-            {messages.map((msg, idx) => (
-              <MessageBubble key={msg.id || idx} message={msg} />
+          /* Active Messages Stream */
+          <div className="max-w-4xl mx-auto space-y-4">
+            {messages.map((msg) => (
+              <MessageBubble key={msg.id} message={msg} />
             ))}
 
-            {/* Live Generation Indicator */}
+            {/* Generating Query Spinner */}
             {isSendingQuery && (
-              <div className="glass-panel-elevated p-4 rounded-2xl border border-sky-500/30 flex items-center gap-3.5 w-fit animate-pulse shadow-glow-blue">
-                <div className="w-8 h-8 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3 text-sky-400" />
-                    Searching vector index & synthesizing verified answer...
+              <div className="flex gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl sm:rounded-3xl glass-panel-elevated border border-white/[0.1] animate-pulse max-w-md mr-auto">
+                <GlassIcon icon={Bot} variant="cyan" size="sm" />
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-200">CampusWise AI</span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                      Searching Vector Index
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 flex items-center gap-1.5">
+                    <Loader2 className="w-3 h-3 animate-spin text-sky-400" />
+                    Retrieving institutional context and generating grounded answer...
                   </p>
-                  <p className="text-[10px] text-slate-400">Computing 768-dim cosine similarity with guardrails</p>
                 </div>
               </div>
             )}
@@ -224,14 +239,24 @@ export default function ChatContainer({ onOpenMobileSidebar }) {
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="p-3.5 sm:p-5 border-t border-white/[0.08] bg-[#05070a]/80 backdrop-blur-xl">
+      {/* Floating Scroll-to-Bottom Pill */}
+      {showScrollBottom && (
+        <button
+          onClick={() => scrollToBottom('smooth')}
+          className="absolute bottom-24 right-6 p-2.5 rounded-full glass-panel-elevated border border-sky-500/40 text-sky-300 hover:text-white shadow-glow-cyan transition-all hover:scale-110 active:scale-95 z-20"
+          title="Scroll to latest message"
+        >
+          <ArrowDown className="w-4 h-4" />
+        </button>
+      )}
+
+      {/* Bottom Fixed Chat Input Bar */}
+      <div className="p-3 sm:p-4 border-t border-white/[0.08] glass-panel bg-[#070b12]/80 backdrop-blur-xl">
         <ChatInput onSendMessage={handleSendMessage} disabled={isLoadingMessages} />
       </div>
 
-      {/* Slide-over Source Drawer */}
+      {/* Source Citation Slide-Over Drawer */}
       <SourceDrawer />
     </div>
   );
 }
-

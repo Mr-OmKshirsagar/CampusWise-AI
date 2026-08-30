@@ -21,7 +21,7 @@ export default function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-[#05070a] text-slate-100 flex flex-col font-sans selection:bg-sky-500 selection:text-white">
+      <div className="min-h-screen bg-[#030508] text-slate-100 flex flex-col font-sans selection:bg-sky-500 selection:text-white">
         <Navbar />
         <div className="flex-1">
           <Routes>

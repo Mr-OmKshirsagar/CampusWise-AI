@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Layers, HardDrive, RefreshCw, Sparkles, Shield, UploadCloud, Database, Cpu } from 'lucide-react';
+import {
+  FileText,
+  Layers,
+  HardDrive,
+  RefreshCw,
+  Sparkles,
+  Shield,
+  UploadCloud,
+  Database,
+  Cpu,
+} from 'lucide-react';
 import { documentApi } from '../../services/api.js';
 import FileDropzone from '../../components/Admin/FileDropzone.jsx';
 import DocumentTable from '../../components/Admin/DocumentTable.jsx';
 import DocumentViewerModal from '../../components/Admin/DocumentViewerModal.jsx';
+import GlassIcon from '../../components/Common/GlassIcon.jsx';
 
 export default function AdminDocumentsPage() {
   const [documents, setDocuments] = useState([]);
@@ -18,8 +29,8 @@ export default function AdminDocumentsPage() {
         documentApi.listAll(),
         documentApi.getStats(),
       ]);
-      setDocuments(docsRes.data.documents || []);
-      setStats(statsRes.data.stats || null);
+      setDocuments(docsRes.data?.documents || []);
+      setStats(statsRes.data?.stats || null);
     } catch (err) {
       console.error('Failed to load documents:', err);
     } finally {
@@ -41,7 +52,7 @@ export default function AdminDocumentsPage() {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-5 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
+    <div className="min-h-[calc(100dvh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
         <div>
@@ -59,44 +70,52 @@ export default function AdminDocumentsPage() {
         <button
           onClick={loadData}
           disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl glass-card text-xs font-semibold text-slate-300 hover:text-white transition-all self-start sm:self-auto active:scale-95 shadow-sm"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl glass-panel-elevated text-xs font-semibold text-slate-300 hover:text-white transition-all self-start sm:self-auto active:scale-95 shadow-sm border border-white/[0.1]"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-sky-400' : 'text-sky-400'}`} />
-          <span>Refresh Index</span>
+          <RefreshCw
+            className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-sky-400' : 'text-sky-400'}`}
+          />
+          <span>Refresh Knowledge Base</span>
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Summary Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-          <div className="glass-card p-5 rounded-2xl flex items-center gap-4 border-white/[0.08] shadow-glass-sm">
-            <div className="w-12 h-12 rounded-2xl glass-icon-box flex items-center justify-center text-sky-400 shadow-glow-blue">
-              <FileText className="w-6 h-6" />
-            </div>
+          <div className="glass-card p-5 rounded-3xl flex items-center gap-4 border-white/[0.08] shadow-glass-sm">
+            <GlassIcon icon={FileText} variant="cyan" size="lg" />
             <div>
-              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Total Documents</p>
-              <p className="font-display text-2xl sm:text-3xl font-extrabold text-white">{stats.totalDocuments}</p>
-            </div>
-          </div>
-
-          <div className="glass-card p-5 rounded-2xl flex items-center gap-4 border-white/[0.08] shadow-glass-sm glass-card-purple">
-            <div className="w-12 h-12 rounded-2xl glass-icon-box flex items-center justify-center text-purple-400 shadow-glow-purple">
-              <Layers className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Indexed Vector Chunks</p>
-              <p className="font-display text-2xl sm:text-3xl font-extrabold text-white">{stats.totalChunks}</p>
-            </div>
-          </div>
-
-          <div className="glass-card p-5 rounded-2xl flex items-center gap-4 border-white/[0.08] shadow-glass-sm glass-card-emerald">
-            <div className="w-12 h-12 rounded-2xl glass-icon-box flex items-center justify-center text-emerald-400 shadow-glow-emerald">
-              <HardDrive className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Vector Storage Size</p>
+              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+                Total Documents
+              </p>
               <p className="font-display text-2xl sm:text-3xl font-extrabold text-white">
-                {(stats.totalStorageBytes / (1024 * 1024)).toFixed(2)} MB
+                {stats.totalDocuments || 0}
+              </p>
+            </div>
+          </div>
+
+          <div className="glass-card p-5 rounded-3xl flex items-center gap-4 border-white/[0.08] shadow-glass-sm glass-card-purple">
+            <GlassIcon icon={Layers} variant="purple" size="lg" />
+            <div>
+              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+                Indexed Vector Chunks
+              </p>
+              <p className="font-display text-2xl sm:text-3xl font-extrabold text-white">
+                {stats.totalChunks || 0}
+              </p>
+            </div>
+          </div>
+
+          <div className="glass-card p-5 rounded-3xl flex items-center gap-4 border-white/[0.08] shadow-glass-sm glass-card-emerald">
+            <GlassIcon icon={HardDrive} variant="emerald" size="lg" />
+            <div>
+              <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+                Vector Storage Size
+              </p>
+              <p className="font-display text-2xl sm:text-3xl font-extrabold text-white">
+                {stats.totalStorageBytes
+                  ? `${(stats.totalStorageBytes / (1024 * 1024)).toFixed(2)} MB`
+                  : '0.00 MB'}
               </p>
             </div>
           </div>
@@ -134,4 +153,3 @@ export default function AdminDocumentsPage() {
     </div>
   );
 }
-

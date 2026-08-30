@@ -1,6 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileText, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2, Sparkles, ScanText, FileUp, Cpu } from 'lucide-react';
+import {
+  UploadCloud,
+  FileText,
+  Image as ImageIcon,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Sparkles,
+  ScanText,
+  FileUp,
+  Cpu,
+  Layers,
+  Check,
+} from 'lucide-react';
 import { documentApi } from '../../services/api.js';
+import GlassIcon from '../Common/GlassIcon.jsx';
 
 const CATEGORIES = [
   'General',
@@ -99,118 +113,154 @@ export default function FileDropzone({ onUploadSuccess }) {
 
       setTimeout(() => {
         setUploadProgress(100);
-        setUploadStage('Document indexed into 768-dim vector space!');
-        setSuccessResult(response.data);
+        setUploadStage('Completed! Document successfully indexed into RAG memory.');
         setIsUploading(false);
+        setSuccessResult(response.document);
         setFile(null);
         setTitle('');
-        if (onUploadSuccess) onUploadSuccess();
+        if (onUploadSuccess) onUploadSuccess(response.document);
       }, 600);
     } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.error || err.message || 'Document ingestion failed.');
       setIsUploading(false);
-      setUploadProgress(0);
-      setError(err.response?.data?.error || err.message || 'Failed to process document.');
     }
   };
 
+  const isImage = file && (file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp)$/i));
+
   return (
-    <div className="glass-panel-elevated p-5 sm:p-7 rounded-3xl border border-white/[0.12] space-y-5 sm:space-y-6 shadow-glass-lg">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div className="glass-panel-elevated p-5 sm:p-7 rounded-3xl border border-white/[0.12] space-y-6 shadow-glass-lg">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-4 border-b border-white/[0.08]">
         <div>
-          <h3 className="font-display font-bold text-base sm:text-xl text-white tracking-tight">
-            Ingest College Circulars & Documents
-          </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Upload institutional PDFs or scanned notice images to auto-chunk, embed, and index with Dual OCR
+          <h2 className="font-display text-lg sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <UploadCloud className="w-5 h-5 text-sky-400" />
+            <span>Document Ingestion Dropzone</span>
+          </h2>
+          <p className="text-xs text-slate-400">
+            Upload institutional PDFs or notices to extract, chunk, embed, and index into vector space.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-            <ScanText className="w-3.5 h-3.5" />
-            Gemini Vision OCR
-          </span>
-          <span className="px-3 py-1 rounded-full text-[11px] font-mono text-sky-300 glass-badge">
-            PDF, PNG, JPG, WEBP (&le; 15MB)
-          </span>
+
+        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-300 border border-sky-500/30">
+          <ScanText className="w-3.5 h-3.5" />
+          <span>Dual OCR Enabled</span>
         </div>
       </div>
 
-      {/* Drag & Drop Area */}
+      {error && (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-300 flex items-center gap-3 animate-slide-up">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {successResult && (
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300 flex items-center justify-between gap-3 animate-slide-up">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div>
+              <span className="font-bold text-white block">Document Successfully Indexed!</span>
+              <span>
+                "{successResult.title}" — {successResult.chunk_count || 0} vector chunks ready for retrieval.
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drag & Drop Visual Area */}
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-2xl p-6 sm:p-10 text-center cursor-pointer transition-all ${
+        className={`border-2 border-dashed rounded-3xl p-6 sm:p-10 text-center cursor-pointer transition-all duration-300 relative overflow-hidden group ${
           isDragging
-            ? 'border-sky-400 bg-sky-500/15 scale-[1.01] shadow-glow-blue'
+            ? 'border-sky-400 bg-sky-500/10 scale-[1.01]'
             : file
-            ? 'border-emerald-500/50 bg-emerald-500/10'
-            : 'border-white/[0.12] hover:border-sky-500/50 hover:bg-white/[0.04]'
+            ? 'border-emerald-500/40 bg-emerald-950/20'
+            : 'border-white/[0.15] hover:border-sky-500/50 hover:bg-white/[0.02]'
         }`}
       >
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
+          accept=".pdf,.png,.jpg,.jpeg,.webp"
+          onChange={(e) => e.target.files && handleFileSelected(e.target.files[0])}
           className="hidden"
-          onChange={(e) => e.target.files?.[0] && handleFileSelected(e.target.files[0])}
         />
 
-        <div className="flex flex-col items-center gap-3.5">
-          <div className={`w-14 h-14 rounded-2xl glass-icon-box flex items-center justify-center ${file ? 'text-emerald-400 shadow-glow-emerald' : 'text-sky-400 shadow-glow-blue'}`}>
-            {file ? (
-              file.type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(file.name) ? (
-                <ImageIcon className="w-7 h-7" />
-              ) : (
-                <FileText className="w-7 h-7" />
-              )
-            ) : (
-              <FileUp className="w-7 h-7 animate-bounce" />
-            )}
-          </div>
-
-          {file ? (
-            <div className="space-y-1">
-              <p className="text-xs sm:text-sm font-bold text-white truncate max-w-xs sm:max-w-md mx-auto">{file.name}</p>
-              <p className="text-[11px] text-slate-400 font-mono">{(file.size / (1024 * 1024)).toFixed(2)} MB • Tap or drop another file to replace</p>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              <p className="text-xs sm:text-sm font-bold text-slate-200">
-                Click to browse file or drag official PDF / circular here
+        {file ? (
+          <div className="flex flex-col items-center space-y-3">
+            <GlassIcon
+              icon={isImage ? ImageIcon : FileText}
+              variant={isImage ? 'emerald' : 'cyan'}
+              size="lg"
+            />
+            <div>
+              <p className="font-bold text-white text-sm sm:text-base">{file.name}</p>
+              <p className="text-xs text-slate-400">
+                {(file.size / (1024 * 1024)).toFixed(2)} MB • {file.type || 'Document'}
               </p>
-              <p className="text-[11px] text-slate-400">Preserves original pages, tables, and OCR visual text</p>
             </div>
-          )}
-        </div>
+            <span className="text-[11px] text-sky-400 font-semibold underline">
+              Click or drag to replace file
+            </span>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center space-y-3">
+            <GlassIcon icon={FileUp} variant="cyan" size="lg" />
+            <div>
+              <p className="font-bold text-white text-sm sm:text-base">
+                Click to browse or drag and drop college circulars
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Official PDF documents or scanned notices up to 15MB
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
+              {['PDF Handbook', 'Scanned Circular (PNG/JPG)', 'Hostel Rules', 'Fee Schedules'].map(
+                (badge) => (
+                  <span
+                    key={badge}
+                    className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold glass-badge text-slate-300"
+                  >
+                    {badge}
+                  </span>
+                )
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Upload Metadata Form */}
+      {/* Metadata Configuration Inputs (shown when file is selected) */}
       {file && (
-        <form onSubmit={handleUpload} className="space-y-4 pt-2">
+        <form onSubmit={handleUpload} className="space-y-4 animate-slide-up">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 tracking-wide">Document Title</label>
+              <label className="text-xs font-bold text-slate-300">Document Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Academic Regulations & Exam Handbook 2026"
+                placeholder="e.g. Academic Regulations Handbook 2025"
                 required
-                className="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 transition-all"
+                className="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-300 tracking-wide">Institutional Category</label>
+              <label className="text-xs font-bold text-slate-300">Campus Domain Category</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs text-white transition-all bg-[#090d16]"
+                className="w-full glass-input rounded-xl px-3.5 py-2.5 text-xs text-white bg-[#070b12]"
               >
                 {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat} className="bg-[#090d16] text-slate-200">
+                  <option key={cat} value={cat} className="bg-[#070b12] text-white">
                     {cat}
                   </option>
                 ))}
@@ -220,75 +270,42 @@ export default function FileDropzone({ onUploadSuccess }) {
 
           {/* Upload Progress Bar */}
           {isUploading && (
-            <div className="space-y-2 p-4 rounded-2xl glass-card border-sky-500/30 shadow-glow-blue">
+            <div className="space-y-2 p-4 rounded-2xl glass-input border-white/[0.1]">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-sky-300 font-bold flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-sky-400" />
+                <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" />
                   {uploadStage}
                 </span>
-                <span className="font-mono text-white font-bold">{uploadProgress}%</span>
+                <span className="font-mono font-bold text-sky-400">{uploadProgress}%</span>
               </div>
               <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-white/[0.05]">
                 <div
-                  className="bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-500 h-full rounded-full transition-all duration-300 shadow-[0_0_10px_#38bdf8]"
+                  className="h-full rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 shadow-glow-blue transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-1">
-            <button
-              type="button"
-              onClick={() => setFile(null)}
-              disabled={isUploading}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white glass-badge transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isUploading || !title.trim()}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-glow-blue transition-all disabled:opacity-50 hover:scale-105 active:scale-95"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Processing & Ingesting...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Index Document into Vector Store</span>
-                </>
-              )}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isUploading}
+            className="w-full py-3 rounded-2xl bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs shadow-glow-blue flex items-center justify-center gap-2 transition-all disabled:opacity-50 hover:scale-[1.01] active:scale-[0.99]"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Processing & Vectorizing...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>Process Document & Upsert Vectors</span>
+              </>
+            )}
+          </button>
         </form>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-300 flex items-center gap-2.5 animate-shake">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* Success Banner */}
-      {successResult && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-xs text-emerald-300 flex items-start gap-3 shadow-glass-sm animate-slide-up">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-bold text-white text-sm">Document successfully indexed!</p>
-            <p className="text-slate-300 leading-relaxed">
-              Processed <strong>{successResult.totalPages} pages</strong> into <strong>{successResult.totalChunks} semantic vector chunks</strong>. Students can now immediately query this knowledge in chat.
-            </p>
-          </div>
-        </div>
       )}
     </div>
   );
 }
-
