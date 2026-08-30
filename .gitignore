@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment Files (Ignore all real env files, preserve examples)
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime & Local Database Files
+pids
+*.pid
+*.seed
+*.pid.lock
+*.db
+*.sqlite
+*.sqlite3
+data/
+backend/data/
+db_store.json
+
+# OCR & AI Model Files (Large Binaries)
+*.traineddata
+backend/eng.traineddata
+
+# Build outputs & Caches
+dist/
+build/
+.next/
+out/
+.vite/
+.cache/
+coverage/
+.nyc_output/
+
+# Uploads and temporary files
+uploads/
+temp/
+.temp/
+*.tmp
+backend/uploads/
+backend/temp/
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+.history/
