@@ -8,28 +8,62 @@
 [![Google Gemini](https://img.shields.io/badge/Google-Gemini_2.0_Flash-4285F4.svg)](https://ai.google.dev)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8.svg)](https://tailwindcss.com)
 
-**CampusWise AI** is a production-ready, full-stack college information assistant built with **Retrieval-Augmented Generation (RAG)**. The platform empowers college administrators to drag-and-drop official PDFs (academic calendars, admission guidelines, hostel rules, exam policies, fee schedules), while authenticated students can query the assistant in natural language and receive grounded, accurate answers backed by **exact document references and page citations**.
+**CampusWise AI** is a production-grade, full-stack college information assistant built with **Retrieval-Augmented Generation (RAG)**. The platform empowers college administrators to drag-and-drop official PDFs and scanned circulars (academic calendars, admission guidelines, hostel rules, exam policies, fee schedules), while authenticated students can query the assistant in natural language and receive grounded, accurate answers backed by **exact document references and page citations**.
 
 ---
 
-## 🌟 Key Highlights & Architectural Strengths
+## 📌 1. Problem Statement & Solution
 
-- **Strict Document Grounding & Anti-Hallucination:** System prompts enforce that all responses are synthesized strictly from retrieved vector context chunks. Out-of-scope queries (e.g. quantum physics or world history) trigger deterministic fallback notices without hallucinating.
-- **Exact Source Transparency:** Every answer displays interactive citation badges showing the referenced document title, page number, and similarity match percentage, opening into a slide-over citation drawer with raw excerpt context.
-- **High-Dimensional Vector Retrieval:** Employs 768-dimensional embeddings (`text-embedding-004`) with Cosine distance indexing (`<=>`), recursive semantic text chunking (800-character target, 100-character overlap), and metadata preservation.
-- **Role-Based Access Control (RBAC):** Strict separation between `student` and `admin` roles, salted bcrypt password hashing (cost factor: 12), and JWT authentication.
-- **Multi-Turn Persistent Dialogue:** Conversation threads and message histories are persisted in PostgreSQL, supporting multi-turn conversational context memory.
-- **Streaming Response Architecture (SSE):** Server-Sent Events support for real-time, low-latency token streaming into the student chat window.
-- **Modern Glassmorphic UI:** Built with React 18, Vite, Tailwind CSS, Lucide icons, and responsive layouts designed for campus portals.
+### The Problem:
+* **Information Fragmentation:** College regulations, academic calendars, hostel curfews, exam schedules, and fee refund policies are scattered across dozens of lengthy PDF notices and circulars.
+* **Student Confusion:** Students struggle to locate exact policy rules, often relying on hearsay or outdated notices.
+* **LLM Hallucinations:** Generic AI chatbots frequently invent dates, exam rules, or fee percentages when answering campus-specific questions.
+
+### The Solution:
+* **CampusWise AI** implements a **strict Grounded RAG Pipeline**. Official documents are indexed into 768-dimensional vector space. Every student prompt is matched against institutional records using cosine similarity (`<=>`), injecting verified text passages into the system prompt and citing exact document titles, page numbers, and similarity confidence scores. Any out-of-scope question is deterministically rejected without hallucinating.
 
 ---
 
-## 🏗️ Architecture & RAG Pipeline Flow
+## ✨ 2. Core & Advanced Features
+
+### 🔹 Core Features:
+- **Interactive Student Chat Interface:** Responsive chat dialogue, auto-scrolling, topic filtering, and suggested query chips.
+- **Secure Authentication & RBAC:** Role-Based Access Control (`student` vs. `admin`), bcrypt salted hashing (cost factor: 12), and JWT session tokens.
+- **Multimodal Document Upload & Ingestion:** Multer upload supporting PDFs and scanned image formats (PNG, JPG, WEBP) up to 15MB.
+- **Semantic Text Extraction & Chunking:** Recursive character splitter (800-char target, 100-char overlap) preserving page numbers and metadata with UTF-8 null-byte sanitization.
+- **High-Dimensional Embeddings:** Google Gemini `text-embedding-004` (768-dim) / OpenAI embeddings / deterministic cosine vectorizer.
+- **pgvector Vector Store:** PostgreSQL `vector(768)` distance search (`<=>`) with threshold filtering ($\ge 0.25$).
+- **Anti-Hallucination Grounding:** Answers conditioned strictly on retrieved context with deterministic out-of-scope fallback.
+- **Source Citation Drawer:** Slide-over panel displaying exact document titles, page numbers, excerpts, and cosine similarity percentages.
+- **Persistent Conversation Memory:** Multi-turn chat sessions stored in PostgreSQL.
+- **Admin Document Management:** Admin dashboard with CRUD operations, search, category filters, 10-item pagination, file viewer modal, and cascading chunk deletion.
+
+### 🌟 Bonus & Advanced Capabilities:
+- **Optical Character Recognition (OCR):** Dual-layer vision OCR (Gemini Vision + Tesseract.js) for scanned college notices.
+- **Centralized Database File Synchronization:** Base64 PDF storage allowing cross-environment previews across localhost and deployed servers.
+- **Mobile Responsive Design:** Slide-over chat drawers, responsive table cards, and full-screen document modals.
+- **Analytics & Health Dashboard:** Vector chunk counts, storage metrics, category breakdown charts, and retrieval latency metrics.
+
+---
+
+## 🛠️ 3. Technology Stack
+
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React 18, Vite 6, Tailwind CSS, Lucide React, Zustand State Management, React Router DOM v6 |
+| **Backend** | Node.js (v20+), Express.js, Multer, Helmet, CORS, Morgan, JWT, bcryptjs |
+| **Database & Vector Store** | PostgreSQL + `pgvector` (Supabase Cloud / Local Postgres), Schema Migrations |
+| **AI / LLM & Embeddings** | Google Gemini (`gemini-1.5-flash`, `text-embedding-004`), OpenAI API fallback, Tesseract.js OCR |
+| **Deployment** | Vercel (Frontend SPA), Render (Backend Web Service), Supabase (PostgreSQL pgvector) |
+
+---
+
+## 🏗️ 4. Architecture & RAG Pipeline Flow
 
 ```mermaid
 flowchart TD
     subgraph Ingestion["1. Admin Document Ingestion Pipeline"]
-        A[Admin PDF Upload] --> B[PDF Page & Text Extraction]
+        A[Admin PDF / Image Upload] --> B[PDF & OCR Text Extraction]
         B --> C[Recursive Semantic Splitter\n800 chars / 100 overlap]
         C --> D[Embeddings Generator\ntext-embedding-004 / 768-dim]
         D --> E[(pgvector / Vector Store\nCosine Metric <=>)]
@@ -39,116 +73,104 @@ flowchart TD
         F[Student Natural Language Query] --> G[Query Embedding Generator]
         G --> H[Vector Similarity Search\nTop-K=4, Threshold Filter]
         E -.->|Nearest Chunks| H
-        H --> I{Similarity >= Threshold?}
+        H --> I{Similarity >= 0.25?}
         I -- No --> J[Deterministic Fallback:\n'Information not available in college documents']
         I -- Yes --> K[Prompt Injection & Context Synthesizer]
-        K --> L[Google Gemini / OpenAI LLM]
+        K --> L[Google Gemini LLM]
         L --> M[Grounded Answer + Source Page Citations]
     end
 ```
 
 ---
 
-## 🗄️ Database Schema & Tables
+## 🌐 5. Live Demo & Deployed URLs
 
-| Table | Primary Key | Key Columns & Foreign Keys | Description |
-| :--- | :--- | :--- | :--- |
-| `users` | `id` (UUID) | `name`, `email` (Unique), `password` (Hash), `role` (`student` / `admin`), `created_at` | Authenticated campus accounts |
-| `documents` | `id` (UUID) | `title`, `filename`, `file_url`, `category`, `file_size`, `chunk_count`, `uploaded_by` (FK $\rightarrow$ `users.id`) | Official uploaded institutional PDF records |
-| `document_chunks` | `id` (UUID) | `document_id` (FK $\rightarrow$ `documents.id` ON DELETE CASCADE), `content`, `chunk_index`, `page_number`, `embedding` (`vector(768)`), `metadata` (JSONB) | Semantic vector chunks with embeddings & page tracking |
-| `conversations` | `id` (UUID) | `user_id` (FK $\rightarrow$ `users.id` ON DELETE CASCADE), `title`, `created_at`, `updated_at` | Multi-turn chat session threads |
-| `messages` | `id` (UUID) | `conversation_id` (FK $\rightarrow$ `conversations.id` ON DELETE CASCADE), `sender` (`user`/`assistant`), `content`, `sources` (JSONB) | Persistent chat dialogue messages & citations |
+- **Live Application (Frontend):** [https://campuswise-ai.vercel.app](https://campuswise-ai.vercel.app)
+- **Live API Endpoint (Backend):** [https://campuswise-ai.onrender.com](https://campuswise-ai.onrender.com)
+- **Database:** Supabase PostgreSQL with `pgvector` extension
 
 ---
 
-## 📡 REST API Reference
-
-### 1. Authentication Endpoints (`/api/auth`)
-- `POST /api/auth/register` – Register a new student or administrator account (`name`, `email`, `password`, `role`).
-- `POST /api/auth/login` – Authenticate credentials and receive a signed JWT token.
-- `GET /api/auth/me` – Retrieve the profile of the current authenticated user (`Bearer <token>`).
-
-### 2. Admin Document Management (`/api/admin`) *(Admin Role Required)*
-- `GET /api/admin/documents` – List all indexed college documents with chunk counts and size metrics.
-- `POST /api/admin/documents/upload` – Multipart PDF upload ($\rightarrow$ extraction $\rightarrow$ semantic chunking $\rightarrow$ vector embedding $\rightarrow$ index).
-- `GET /api/admin/documents/:id` – Retrieve a specific document with all its indexed chunks.
-- `DELETE /api/admin/documents/:id` – Cascade-delete a document and all its vector embeddings.
-- `GET /api/admin/stats` – Aggregate statistics on total documents, vector chunks, storage size, and category distribution.
-
-### 3. Chat & RAG Retrieval (`/api/chat`) *(Authenticated)*
-- `POST /api/chat/conversations` – Create a new conversation thread session.
-- `GET /api/chat/conversations` – Retrieve user's conversation history.
-- `GET /api/chat/conversations/:id` – Retrieve conversation message history and referenced source tags.
-- `POST /api/chat/conversations/:id/query` – Main RAG execution endpoint (generates grounded answers with sources or streams via SSE).
-- `DELETE /api/chat/conversations/:id` – Delete a conversation thread and its message history.
-
----
-
-## 🚀 Quickstart & Local Setup
+## 💻 6. Step-by-Step Local Setup Instructions
 
 ### Prerequisites
 - **Node.js** v18+ (tested on Node v20 & v24)
 - **npm** v9+
-- Optional: **PostgreSQL** with `pgvector` extension (or Supabase URL). *An embedded local vector store is built-in for zero-dependency offline development and testing.*
 
-### 1. Clone & Configure Environment Variables
+### 1. Clone & Install Dependencies
 ```bash
-cd "CampusWise-AI"
+git clone https://github.com/Mr-OmKshirsagar/CampusWise-AI.git
+cd CampusWise-AI
 
-# Backend setup
+# Install Backend dependencies
 cd backend
-cp .env.example .env
+npm install
+
+# Install Frontend dependencies
+cd ../frontend
 npm install
 ```
 
-### 2. Populate `.env` Secrets
-Configure the following in `backend/.env`:
-```env
-PORT=5000
-NODE_ENV=development
-JWT_SECRET=your_super_secure_jwt_secret_key_2026
-JWT_EXPIRES_IN=7d
-
-# Optional: Google Gemini API Key for production LLM generation
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-flash
-GEMINI_EMBEDDING_MODEL=text-embedding-004
-
-# Optional: PostgreSQL Database URL with pgvector (Supabase or Local)
-# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/campuswise
+### 2. Configure Environment Variables
+Copy `.env.example` to `.env` in `backend/`:
+```bash
+cd ../backend
+cp .env.example .env
 ```
 
-### 3. Seed Sample Institutional PDFs
-Generate official multi-page PDFs in `backend/sample_data/`:
+### 3. Generate Sample College PDFs
 ```bash
 node src/utils/generateSamplePdfs.js
 ```
 
-### 4. Run Automated Backend Test Suites
-Verify authentication, RBAC, document ingestion, vector retrieval, and grounding:
+### 4. Run Test Suites
 ```bash
 npm test
 ```
 
-### 5. Start the Application
-In terminal 1 (Backend):
+### 5. Start Development Servers
+In Terminal 1 (Backend):
 ```bash
 cd backend
 npm run dev
-# Server running at http://localhost:5000
+# Running at http://localhost:5000
 ```
 
-In terminal 2 (Frontend):
+In Terminal 2 (Frontend):
 ```bash
 cd frontend
-npm install
 npm run dev
-# Frontend running at http://localhost:5173
+# Running at http://localhost:5173
 ```
 
 ---
 
-## 🧪 Verified Test Questions & Grounding Benchmarks
+## 🔐 7. Environment Variables (`backend/.env.example`)
+
+```env
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# JWT Authentication
+JWT_SECRET=your_super_secure_jwt_secret_key_2026
+JWT_EXPIRES_IN=7d
+
+# Google Gemini AI Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
+GEMINI_EMBEDDING_MODEL=text-embedding-004
+
+# PostgreSQL Database URL with pgvector (Supabase Pooler URI or Local)
+DATABASE_URL=postgresql://postgres.yourref:yourpass@aws-0-region.pooler.supabase.com:6543/postgres
+
+# CORS Configuration
+CORS_ORIGIN=http://localhost:5173,https://campuswise-ai.vercel.app
+```
+
+---
+
+## 🧪 8. Verified Test Questions & Grounding Benchmarks
 
 | Domain | Question | Matched Source | Grounded Result |
 | :--- | :--- | :--- | :--- |
@@ -159,23 +181,5 @@ npm run dev
 
 ---
 
-## 🌐 Deployment Guide
-
-### Deploying Backend to Render
-1. Create a **Web Service** on [Render](https://render.com).
-2. Set Root Directory to `backend`.
-3. Build Command: `npm install`
-4. Start Command: `node src/server.js`
-5. Add Environment Variables: `PORT=5000`, `NODE_ENV=production`, `JWT_SECRET`, `GEMINI_API_KEY`, `DATABASE_URL` (Supabase Postgres URI), `CORS_ORIGIN` (Your Vercel URL).
-
-### Deploying Frontend to Vercel
-1. Import repository to [Vercel](https://vercel.com).
-2. Set Root Directory to `frontend`.
-3. Framework Preset: **Vite**.
-4. Environment Variables: `VITE_API_URL=https://your-backend-api.onrender.com/api`.
-5. Deploy!
-
----
-
-## 📄 License
+## 📄 9. License
 This project is open-source and licensed under the [MIT License](LICENSE).
