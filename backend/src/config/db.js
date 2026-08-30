@@ -71,6 +71,7 @@ export async function initDb() {
   loadLocalStore();
 
   if (env.database.url && env.database.adapter !== 'memory') {
+    try {
       pool = new Pool({
         connectionString: env.database.url,
         ssl:
