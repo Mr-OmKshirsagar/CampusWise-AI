@@ -71,10 +71,13 @@ export async function initDb() {
   loadLocalStore();
 
   if (env.database.url && env.database.adapter !== 'memory') {
-    try {
       pool = new Pool({
         connectionString: env.database.url,
-        ssl: env.nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+        ssl:
+          env.database.url.includes('localhost') || env.database.url.includes('127.0.0.1')
+            ? false
+            : { rejectUnauthorized: false },
+        connectionTimeoutMillis: 10000,
       });
 
       // Test connection

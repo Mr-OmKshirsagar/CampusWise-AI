@@ -32,22 +32,32 @@ if (env.nodeEnv !== 'test') {
 }
 
 // CORS Configuration
+const allowedOrigins = env.corsOrigins.map((o) => o.replace(/\/+$/, '').toLowerCase());
+
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server, Postman)
     if (!origin) return callback(null, true);
-    if (env.corsOrigins.includes('*') || env.corsOrigins.includes(origin)) {
+
+    const normalizedOrigin = origin.replace(/\/+$/, '').toLowerCase();
+
+    if (
+      allowedOrigins.includes('*') ||
+      allowedOrigins.includes(normalizedOrigin) ||
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.onrender.com') ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1')
+    ) {
       return callback(null, true);
     }
-    // Allow localhost during development
-    if (env.nodeEnv === 'development' && origin.startsWith('http://localhost:')) {
-      return callback(null, true);
-    }
-    callback(new Error(`CORS origin not allowed: ${origin}`));
+
+    console.warn(`[CORS] Rejected request from origin: ${origin}`);
+    callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 };
 app.use(cors(corsOptions));
 
@@ -80,8 +90,8 @@ const apiLimiter = rateLimit({
 app.use('/api/', apiLimiter);
 app.use('/api/auth/', authLimiter);
 
-// Health Check Endpoint
-app.get('/api/health', (req, res) => {
+// Health Check Endpoint (support root, /health, /api/health)
+app.get(['/api/health', '/health', '/'], (req, res) => {
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -90,10 +100,13 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Mount Routes
+// Mount Routes (support both /api/ prefix and root path)
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 app.use('/api/admin', documentRoutes);
+app.use('/admin', documentRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/chat', chatRoutes);
 
 // 404 Not Found Handler
 app.use((req, res, next) => {
