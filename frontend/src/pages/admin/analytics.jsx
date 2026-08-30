@@ -35,7 +35,7 @@ export default function AdminAnalyticsPage() {
   const maxCategoryCount = Math.max(...categoryBreakdown.map(([, count]) => count), 1);
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white transition-colors duration-300">
+    <div className="min-h-[calc(100dvh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2">

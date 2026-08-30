@@ -132,7 +132,7 @@ export default function LandingPage() {
   const currentDemo = demoPrompts[activeDemoPrompt];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-[#030508] text-slate-900 dark:text-slate-100 flex flex-col relative overflow-hidden bg-ambient-mesh selection:bg-sky-500 selection:text-white transition-colors duration-300">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col relative overflow-hidden bg-ambient-mesh selection:bg-sky-500 selection:text-white">
       {/* Background Ambient Floating Orbs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute -top-40 -left-40 w-[350px] sm:w-[550px] h-[350px] sm:h-[550px] bg-sky-500/10 rounded-full blur-[100px] sm:blur-[140px] animate-pulse-glow" />

@@ -2,6 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Register animatable CSS Color properties */
+@property --bg-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f8fafc;
+}
+@property --bg-secondary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f1f5f9;
+}
+@property --glass-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(255, 255, 255, 0.75);
+}
+@property --glass-bg-elevated {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(255, 255, 255, 0.88);
+}
+@property --glass-border {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(226, 232, 240, 0.8);
+}
+@property --glass-border-light {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(255, 255, 255, 0.9);
+}
+@property --text-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #0f172a;
+}
+@property --text-secondary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #475569;
+}
+@property --text-muted {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #64748b;
+}
+@property --accent-glow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(14, 165, 233, 0.15);
+}
+@property --mesh-c1 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(14, 165, 233, 0.08);
+}
+@property --mesh-c2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(168, 85, 247, 0.07);
+}
+@property --mesh-c3 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(34, 197, 94, 0.05);
+}
+@property --grid-line {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(100, 116, 139, 0.08);
+}
+
 @layer base {
   :root {
     --bg-primary: #f8fafc;
@@ -14,6 +86,10 @@
     --text-secondary: #475569;
     --text-muted: #64748b;
     --accent-glow: rgba(14, 165, 233, 0.15);
+    --mesh-c1: rgba(14, 165, 233, 0.08);
+    --mesh-c2: rgba(168, 85, 247, 0.07);
+    --mesh-c3: rgba(34, 197, 94, 0.05);
+    --grid-line: rgba(100, 116, 139, 0.08);
   }
 
   .dark {
@@ -27,6 +103,10 @@
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
     --accent-glow: rgba(56, 189, 248, 0.25);
+    --mesh-c1: rgba(56, 189, 248, 0.1);
+    --mesh-c2: rgba(168, 85, 247, 0.08);
+    --mesh-c3: rgba(34, 197, 94, 0.06);
+    --grid-line: rgba(255, 255, 255, 0.04);
   }
 
   html,
@@ -65,6 +145,28 @@
   }
 }
 
+/* 🌟 View Transitions API - Hardware-Accelerated Continuous Circular Reveal */
+::view-transition-group(root) {
+  animation-duration: 1600ms !important;
+}
+
+::view-transition-image-pair(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none !important;
+  mix-blend-mode: normal !important;
+  height: 100% !important;
+  overflow: clip !important;
+}
+
+::view-transition-old(root) {
+  z-index: 1 !important;
+}
+
+::view-transition-new(root) {
+  z-index: 9999 !important;
+}
+
 /* Glassmorphism Tokens & Surface Classes */
 @layer components {
   /* Standard Frosted Glass Panel */
@@ -81,11 +183,7 @@
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: 1px solid var(--glass-border-light);
-    box-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.08);
-  }
-
-  .dark .glass-panel-elevated {
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.15);
   }
 
   /* Glass Card with Hover Lift */
@@ -94,35 +192,26 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.25s ease;
   }
 
   .glass-card:hover {
     border-color: rgba(14, 165, 233, 0.4);
     transform: translateY(-2px);
-    box-shadow: 0 12px 32px -8px rgba(14, 165, 233, 0.15);
   }
 
   .dark .glass-card:hover {
     border-color: rgba(56, 189, 248, 0.4);
-    box-shadow: 0 0 25px -4px rgba(56, 189, 248, 0.25);
   }
 
   /* Tinted Glass Color Variants */
   .glass-card-purple:hover {
     border-color: rgba(168, 85, 247, 0.4);
-    box-shadow: 0 12px 32px -8px rgba(168, 85, 247, 0.15);
-  }
-  .dark .glass-card-purple:hover {
-    box-shadow: 0 0 25px -4px rgba(168, 85, 247, 0.25);
   }
 
   .glass-card-emerald:hover {
     border-color: rgba(34, 197, 94, 0.4);
-    box-shadow: 0 12px 32px -8px rgba(34, 197, 94, 0.15);
-  }
-  .dark .glass-card-emerald:hover {
-    box-shadow: 0 0 25px -4px rgba(34, 197, 94, 0.25);
   }
 
   /* Glass Input Field */
@@ -132,7 +221,6 @@
     -webkit-backdrop-filter: blur(8px);
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
-    transition: all 0.2s ease;
   }
 
   .dark .glass-input {
@@ -165,13 +253,11 @@
     background: rgba(14, 165, 233, 0.1);
     backdrop-filter: blur(12px);
     border: 1px solid rgba(14, 165, 233, 0.3);
-    box-shadow: 0 0 15px -2px rgba(14, 165, 233, 0.2);
   }
 
   .dark .glass-badge-glow {
     background: rgba(56, 189, 248, 0.12);
     border: 1px solid rgba(56, 189, 248, 0.35);
-    box-shadow: 0 0 20px -3px rgba(56, 189, 248, 0.3);
   }
 
   /* 3D Glass Icon Base & Themes */
@@ -179,73 +265,53 @@
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border-light);
-    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.9), 0 4px 12px rgba(0, 0, 0, 0.04);
   }
 
   .dark .glass-icon-box {
     background: rgba(12, 18, 32, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.2), 0 4px 20px rgba(0, 0, 0, 0.5);
   }
 
   .glass-icon-cyan {
     background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(56, 189, 248, 0.08));
     border: 1px solid rgba(14, 165, 233, 0.3);
-    box-shadow: 0 4px 16px -2px rgba(14, 165, 233, 0.2);
   }
 
   .glass-icon-emerald {
     background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(74, 222, 128, 0.08));
     border: 1px solid rgba(34, 197, 94, 0.3);
-    box-shadow: 0 4px 16px -2px rgba(34, 197, 94, 0.2);
   }
 
   .glass-icon-amber {
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.08));
     border: 1px solid rgba(245, 158, 11, 0.3);
-    box-shadow: 0 4px 16px -2px rgba(245, 158, 11, 0.2);
   }
 
   .glass-icon-purple {
     background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(192, 132, 252, 0.08));
     border: 1px solid rgba(168, 85, 247, 0.3);
-    box-shadow: 0 4px 16px -2px rgba(168, 85, 247, 0.2);
   }
 
   .glass-icon-rose {
     background: linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(251, 113, 133, 0.08));
     border: 1px solid rgba(244, 63, 94, 0.3);
-    box-shadow: 0 4px 16px -2px rgba(244, 63, 94, 0.2);
   }
 }
 
 /* Ambient Background Mesh */
 .bg-ambient-mesh {
   background-image: 
-    radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.07) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(34, 197, 94, 0.05) 0px, transparent 50%);
-}
-
-.dark .bg-ambient-mesh {
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(168, 85, 247, 0.08) 0px, transparent 50%),
-    radial-gradient(at 50% 100%, rgba(34, 197, 94, 0.06) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, var(--mesh-c1) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, var(--mesh-c2) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, var(--mesh-c3) 0px, transparent 50%);
 }
 
 /* Grid overlay background pattern */
 .grid-pattern {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(100, 116, 139, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(100, 116, 139, 0.08) 1px, transparent 1px);
-}
-
-.dark .grid-pattern {
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
 }
 
 /* Markdown typography styling */

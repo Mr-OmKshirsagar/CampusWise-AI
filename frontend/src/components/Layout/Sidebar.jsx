@@ -264,7 +264,7 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white/80 dark:bg-[#070b12]/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-white/[0.08] relative select-none transition-colors duration-300">
+    <div className="flex flex-col h-full bg-white/80 dark:bg-[#070b12]/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-white/[0.08] relative select-none">
       {/* Top Header & New Chat Button */}
       <div className="p-3.5 space-y-3 border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.01]">
         <button

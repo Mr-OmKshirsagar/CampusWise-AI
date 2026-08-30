@@ -36,7 +36,7 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-white/[0.08] glass-panel bg-white/80 dark:bg-[#030508]/85 backdrop-blur-xl transition-colors duration-300">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-white/[0.08] glass-panel bg-[var(--glass-bg)] backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between gap-2">
         {/* Brand Logo (Responsive sizes) */}
         <Link to="/" className="flex items-center shrink-0 min-w-0">

@@ -97,9 +97,9 @@ export default function ChatContainer({ onOpenMobileSidebar }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] overflow-hidden bg-slate-50/50 dark:bg-[#030508]/60 relative bg-ambient-mesh selection:bg-sky-500 selection:text-white transition-colors duration-300">
+    <div className="flex-1 flex flex-col h-[calc(100dvh-3.5rem)] sm:h-[calc(100dvh-4rem)] overflow-hidden bg-slate-50/50 dark:bg-[#030508]/60 relative bg-ambient-mesh selection:bg-sky-500 selection:text-white">
       {/* Active Conversation Title Top Bar */}
-      <div className="px-3 sm:px-6 py-2 sm:py-3 border-b border-slate-200/80 dark:border-white/[0.08] glass-panel flex items-center justify-between z-10 bg-white/80 dark:bg-[#070b12]/80 backdrop-blur-xl transition-colors duration-300 gap-2">
+      <div className="px-3 sm:px-6 py-2 sm:py-3 border-b border-slate-200/80 dark:border-white/[0.08] glass-panel flex items-center justify-between z-10 bg-white/80 dark:bg-[#070b12]/80 backdrop-blur-xl gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           {onOpenMobileSidebar && (
             <button
