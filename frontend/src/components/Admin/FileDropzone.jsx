@@ -114,18 +114,18 @@ export default function FileDropzone({ onUploadSuccess }) {
   };
 
   return (
-    <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="glass-panel p-4 sm:p-6 rounded-2xl border border-slate-800 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="font-display font-bold text-lg text-white">Ingest College Documents & Photos</h3>
+          <h3 className="font-display font-bold text-base sm:text-lg text-white">Ingest College Documents & Photos</h3>
           <p className="text-xs text-slate-400">Upload official PDFs, circulars, or scanned document photos to chunk, embed, and index with OCR</p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <ScanText className="w-3.5 h-3.5" />
             OCR Active
           </span>
-          <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+          <span className="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
             PDF, PNG, JPG, WEBP (Max 15MB)
           </span>
         </div>
@@ -137,7 +137,7 @@ export default function FileDropzone({ onUploadSuccess }) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+        className={`relative border-2 border-dashed rounded-xl p-5 sm:p-8 text-center cursor-pointer transition-all ${
           isDragging
             ? 'border-sky-400 bg-sky-500/10 scale-[1.01]'
             : file
@@ -154,29 +154,29 @@ export default function FileDropzone({ onUploadSuccess }) {
         />
 
         <div className="flex flex-col items-center gap-3">
-          <div className={`p-3.5 rounded-2xl ${file ? 'bg-emerald-500/20 text-emerald-400' : 'bg-sky-500/10 text-sky-400'}`}>
+          <div className={`p-3 sm:p-3.5 rounded-2xl ${file ? 'bg-emerald-500/20 text-emerald-400' : 'bg-sky-500/10 text-sky-400'}`}>
             {file ? (
               file.type.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(file.name) ? (
-                <ImageIcon className="w-8 h-8" />
+                <ImageIcon className="w-6 h-6 sm:w-8 sm:h-8" />
               ) : (
-                <FileText className="w-8 h-8" />
+                <FileText className="w-6 h-6 sm:w-8 sm:h-8" />
               )
             ) : (
-              <UploadCloud className="w-8 h-8" />
+              <UploadCloud className="w-6 h-6 sm:w-8 sm:h-8" />
             )}
           </div>
 
           {file ? (
             <div>
-              <p className="text-sm font-semibold text-white">{file.name}</p>
-              <p className="text-xs text-slate-400 mt-0.5">{(file.size / (1024 * 1024)).toFixed(2)} MB • Click or drop to replace</p>
+              <p className="text-xs sm:text-sm font-semibold text-white truncate max-w-xs">{file.name}</p>
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">{(file.size / (1024 * 1024)).toFixed(2)} MB • Tap or drop to replace</p>
             </div>
           ) : (
             <div>
-              <p className="text-sm font-semibold text-slate-200">
-                Drag and drop your official PDF, circular, or photo here
+              <p className="text-xs sm:text-sm font-semibold text-slate-200">
+                Tap to choose file or drop official PDF / photo here
               </p>
-              <p className="text-xs text-slate-500 mt-1">Supports PDF documents and scanned images (PNG, JPG, WEBP)</p>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-1">Supports PDF documents and scanned images (PNG, JPG, WEBP)</p>
             </div>
           )}
         </div>

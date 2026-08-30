@@ -80,60 +80,68 @@ export default function DocumentViewerModal({ documentId, onClose }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-6xl h-[92vh] flex flex-col glass-panel rounded-2xl border border-slate-800 shadow-2xl overflow-hidden bg-slate-950/95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 bg-slate-950/85 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full h-[100dvh] sm:h-[92vh] max-w-6xl flex flex-col glass-panel rounded-none sm:rounded-2xl border-0 sm:border border-slate-800 shadow-2xl overflow-hidden bg-slate-950/95">
         {/* Top Header Bar */}
-        <div className="p-4 sm:px-6 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-900/60">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`p-2.5 rounded-xl ${isImage ? 'bg-emerald-500/10 text-emerald-400' : 'bg-sky-500/10 text-sky-400'}`}>
-              {isImage ? <ImageIcon className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="font-display font-bold text-base sm:text-lg text-white truncate max-w-md">
-                  {doc.title || 'Document Preview'}
-                </h3>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                  {doc.category || 'General'}
-                </span>
-                <span className="hidden sm:inline-block px-2 py-0.5 rounded-md text-[10px] font-mono text-slate-400 bg-slate-800/60 border border-slate-700/60">
-                  {isImage ? 'IMAGE DOCUMENT' : 'PDF DOCUMENT'}
-                </span>
+        <div className="p-3 sm:px-6 border-b border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/60">
+          <div className="flex items-center justify-between gap-3 min-w-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className={`p-2 rounded-xl shrink-0 ${isImage ? 'bg-emerald-500/10 text-emerald-400' : 'bg-sky-500/10 text-sky-400'}`}>
+                {isImage ? <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" /> : <FileText className="w-4 h-4 sm:w-5 sm:h-5" />}
               </div>
-              <p className="text-xs text-slate-400 truncate max-w-lg mt-0.5 font-mono">
-                {doc.filename} • {doc.file_size ? `${(doc.file_size / 1024).toFixed(1)} KB` : ''} • {doc.chunk_count || chunks.length} Indexed Chunks
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h3 className="font-display font-bold text-sm sm:text-base text-white truncate max-w-[200px] sm:max-w-md">
+                    {doc.title || 'Document Preview'}
+                  </h3>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                    {doc.category || 'General'}
+                  </span>
+                </div>
+                <p className="text-[10px] sm:text-xs text-slate-400 truncate max-w-xs sm:max-w-lg mt-0.5 font-mono">
+                  {doc.filename} • {doc.chunk_count || chunks.length} Chunks
+                </p>
+              </div>
             </div>
+
+            {/* Mobile Close Button in Header */}
+            <button
+              onClick={onClose}
+              title="Close modal"
+              className="sm:hidden p-2 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           {/* Action Buttons & Tabs */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between sm:justify-end gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
             {/* View Mode Tabs */}
-            <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <div className="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0">
               <button
                 onClick={() => setActiveTab('preview')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   activeTab === 'preview'
                     ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Original View
+                Original
               </button>
               <button
                 onClick={() => setActiveTab('chunks')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   activeTab === 'chunks'
                     ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Chunks & OCR ({chunks.length})</span>
+                <span>Chunks ({chunks.length})</span>
               </button>
               <button
                 onClick={() => setActiveTab('metadata')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   activeTab === 'metadata'
                     ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                     : 'text-slate-400 hover:text-white'
@@ -144,37 +152,38 @@ export default function DocumentViewerModal({ documentId, onClose }) {
               </button>
             </div>
 
-            {/* External Open & Download */}
-            {fileUrl && (
-              <>
-                <a
-                  href={fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Open file in new tab"
-                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </a>
-                <a
-                  href={fileUrl}
-                  download={doc.filename || 'document'}
-                  title="Download original file"
-                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-colors"
-                >
-                  <Download className="w-4 h-4" />
-                </a>
-              </>
-            )}
+            {/* External Open & Download & Desktop Close */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {fileUrl && (
+                <>
+                  <a
+                    href={fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open file in new tab"
+                    className="p-1.5 sm:p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </a>
+                  <a
+                    href={fileUrl}
+                    download={doc.filename || 'document'}
+                    title="Download original file"
+                    className="p-1.5 sm:p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </a>
+                </>
+              )}
 
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              title="Close modal (Esc)"
-              className="p-2 rounded-xl bg-slate-900 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-500/30 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+              <button
+                onClick={onClose}
+                title="Close modal (Esc)"
+                className="hidden sm:flex p-2 rounded-xl bg-slate-900 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-500/30 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 

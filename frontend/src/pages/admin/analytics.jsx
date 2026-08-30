@@ -16,22 +16,22 @@ export default function AdminAnalyticsPage() {
   const categoryBreakdown = stats?.categories ? Object.entries(stats.categories) : [];
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-[calc(100vh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <div className="flex items-center gap-2">
           <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-sky-500/10 text-sky-400 border border-sky-500/20">
             System Analytics
           </span>
-          <span className="text-slate-500 text-xs">• RAG Knowledge Index Health</span>
+          <span className="text-slate-500 text-[11px] sm:text-xs">• RAG Knowledge Index Health</span>
         </div>
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+        <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mt-1">
           Knowledge Base & Performance Analytics
         </h1>
       </div>
 
       {/* Health Overview Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
         <div className="glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Vector Store Health</span>

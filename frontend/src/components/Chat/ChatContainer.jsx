@@ -7,7 +7,7 @@ import SuggestedQuestions from './SuggestedQuestions.jsx';
 import ChatInput from './ChatInput.jsx';
 import SourceDrawer from './SourceDrawer.jsx';
 
-export default function ChatContainer() {
+export default function ChatContainer({ onOpenMobileSidebar }) {
   const {
     currentConversationId,
     currentConversation,
@@ -74,9 +74,18 @@ export default function ChatContainer() {
   return (
     <div className="flex-1 flex flex-col h-[calc(100vh-4rem)] overflow-hidden bg-slate-950/40 relative">
       {/* Active Conversation Title Header */}
-      <div className="px-4 sm:px-6 py-3 border-b border-slate-800/80 glass-panel flex items-center justify-between z-10 bg-slate-950/70">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0">
+      <div className="px-3 sm:px-6 py-2.5 sm:py-3 border-b border-slate-800/80 glass-panel flex items-center justify-between z-10 bg-slate-950/70">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {onOpenMobileSidebar && (
+            <button
+              onClick={onOpenMobileSidebar}
+              title="Open Chat History"
+              className="md:hidden p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white shrink-0 active:scale-95 transition-transform"
+            >
+              <MessageSquare className="w-4 h-4 text-sky-400" />
+            </button>
+          )}
+          <div className="p-2 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0 hidden sm:block">
             <Bot className="w-4 h-4" />
           </div>
           <div className="min-w-0">

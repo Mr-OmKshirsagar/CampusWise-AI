@@ -6,6 +6,7 @@ import { useChatStore } from '../../store/chatStore.js';
 
 export default function ChatPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { selectConversation } = useChatStore();
   const { id } = useParams();
 
@@ -16,15 +17,17 @@ export default function ChatPage() {
   }, [id, selectConversation]);
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-slate-950">
-      {/* Conversation Thread Sidebar */}
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-slate-950 relative">
+      {/* Conversation Thread Sidebar (Desktop + Mobile Drawer) */}
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isMobileOpen={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* Main Chat Workspace */}
-      <ChatContainer />
+      <ChatContainer onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)} />
     </div>
   );
 }

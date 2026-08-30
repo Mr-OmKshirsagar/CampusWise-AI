@@ -35,27 +35,27 @@ export default function LandingPage() {
         <div className="absolute -bottom-40 left-1/3 w-96 h-96 bg-campus-500/10 rounded-full blur-3xl" />
       </div>
 
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 relative z-10 space-y-24">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 md:py-20 relative z-10 space-y-16 sm:space-y-24">
         {/* Hero Section */}
-        <section className="text-center max-w-4xl mx-auto space-y-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-wider animate-fade-in shadow-inner">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Official College Retrieval-Augmented Generation (RAG) Platform</span>
+        <section className="text-center max-w-4xl mx-auto space-y-6 sm:space-y-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-[11px] sm:text-xs font-semibold uppercase tracking-wider animate-fade-in shadow-inner">
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Official College RAG Platform</span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
+          <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
             Official Campus Answers,{' '}
             <span className="bg-gradient-to-r from-sky-400 via-campus-400 to-indigo-400 bg-clip-text text-transparent">
               Zero Hallucinations.
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
             CampusWise AI indexes official college PDFs, academic calendars, fee rules, and hostel regulations. Students receive instant, grounded responses backed by exact document titles and page citations.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 w-full max-w-md sm:max-w-none mx-auto">
             {isAuthenticated ? (
               <Link
                 to="/chat"

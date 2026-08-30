@@ -77,13 +77,13 @@ export default function ChatInput({ onSendMessage, disabled }) {
           placeholder="Ask anything about admissions, attendance, fees, exams, or hostel rules..."
           disabled={isSendingQuery || disabled}
           rows={1}
-          className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-3 py-2 max-h-40 min-h-[40px] leading-relaxed"
+          className="flex-1 bg-transparent text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-2.5 sm:px-3 py-2 max-h-36 sm:max-h-40 min-h-[38px] leading-relaxed"
         />
 
         <button
           type="submit"
           disabled={!input.trim() || isSendingQuery || disabled}
-          className={`p-2.5 rounded-xl flex items-center justify-center transition-all ${
+          className={`p-2 sm:p-2.5 rounded-xl flex items-center justify-center transition-all shrink-0 ${
             input.trim() && !isSendingQuery && !disabled
               ? 'bg-gradient-to-tr from-sky-600 to-campus-500 text-white shadow-md shadow-sky-600/30 hover:scale-105 active:scale-95'
               : 'bg-slate-800/80 text-slate-500 cursor-not-allowed'
@@ -99,11 +99,12 @@ export default function ChatInput({ onSendMessage, disabled }) {
       </form>
 
       {/* Helper text */}
-      <div className="flex items-center justify-between text-[11px] text-slate-500 px-2">
-        <span>Press <kbd className="font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-400">Enter</kbd> to ask, <kbd className="font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-400">Shift + Enter</kbd> for new line</span>
+      <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 px-2">
+        <span className="hidden sm:inline">Press <kbd className="font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-400">Enter</kbd> to ask, <kbd className="font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 text-slate-400">Shift + Enter</kbd> for new line</span>
+        <span className="sm:hidden text-[10px]">Official verified sources</span>
         <span className="flex items-center gap-1">
           <Sparkles className="w-3 h-3 text-sky-400" />
-          Grounded with Cosine Vector Search
+          Grounded Vector Search
         </span>
       </div>
     </div>

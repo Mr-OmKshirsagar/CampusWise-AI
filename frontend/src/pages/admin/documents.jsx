@@ -41,7 +41,7 @@ export default function AdminDocumentsPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-[calc(100vh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -49,9 +49,9 @@ export default function AdminDocumentsPage() {
             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
               Admin Portal
             </span>
-            <span className="text-slate-500 text-xs">• Vector Index Management</span>
+            <span className="text-slate-500 text-[11px] sm:text-xs">• Vector Index Management</span>
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">
+          <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight mt-1">
             Institutional Document Ingestion
           </h1>
         </div>

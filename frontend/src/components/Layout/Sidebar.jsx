@@ -19,7 +19,7 @@ const MIN_SIDEBAR_WIDTH = 260; // Minimum fixed width in expanded mode
 const MAX_SIDEBAR_WIDTH = 480; // Maximum allowed length/width in expanded mode
 const DEFAULT_SIDEBAR_WIDTH = 300;
 
-export default function Sidebar({ isCollapsed, onToggle }) {
+export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMobile }) {
   const {
     conversations,
     currentConversationId,
@@ -62,7 +62,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
     }
   }, [editingId]);
 
-  // Handle Drag-to-Resize with Min and Max Width Clamping
+  // Handle Drag-to-Resize with Min and Max Width Clamping (desktop only)
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizing) return;
@@ -103,6 +103,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
   const handleNewChat = async () => {
     try {
       const newConv = await createNewConversation();
+      if (onCloseMobile) onCloseMobile();
       navigate(`/chat/${newConv.id}`);
     } catch (err) {
       console.error(err);
@@ -112,6 +113,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
   const handleSelect = (id) => {
     if (editingId === id) return;
     selectConversation(id);
+    if (onCloseMobile) onCloseMobile();
     navigate(`/chat/${id}`);
   };
 
@@ -162,73 +164,63 @@ export default function Sidebar({ isCollapsed, onToggle }) {
     (c.title || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return (
-    <aside
-      ref={sidebarRef}
-      style={{
-        width: isCollapsed ? '4rem' : `${sidebarWidth}px`,
-        minWidth: isCollapsed ? '4rem' : `${MIN_SIDEBAR_WIDTH}px`,
-        maxWidth: isCollapsed ? '4rem' : `${MAX_SIDEBAR_WIDTH}px`,
-      }}
-      className={`relative border-r border-slate-800/80 bg-slate-950/70 flex flex-col z-30 shrink-0 ${
-        isResizing ? '' : 'transition-[width] duration-200'
-      }`}
-    >
-      {/* Draggable Resize Handle on Right Border */}
+  const sidebarContent = (
+    <>
+      {/* Draggable Resize Handle on Right Border (Desktop Only) */}
       {!isCollapsed && (
         <div
           onMouseDown={handleStartResize}
-          title="Drag to resize sidebar width (Min: 260px, Max: 480px)"
-          className="absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:w-2 hover:bg-sky-500/50 active:bg-sky-400 transition-all z-40 group select-none"
+          title="Drag to resize sidebar width"
+          className="hidden md:block absolute top-0 right-0 w-1.5 h-full cursor-col-resize hover:w-2 hover:bg-sky-500/50 active:bg-sky-400 transition-all z-40 group select-none"
         >
           <div className={`w-full h-full ${isResizing ? 'bg-sky-400' : 'group-hover:bg-sky-500/60'}`} />
         </div>
       )}
+
       {/* Sidebar Header: New Chat & Toggle */}
       <div className="p-3 border-b border-slate-800/80 flex items-center justify-between gap-2">
-        {!isCollapsed ? (
-          <button
-            onClick={handleNewChat}
-            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-campus-600 hover:from-sky-500 hover:to-campus-500 text-white font-medium text-xs shadow-md shadow-sky-600/20 transition-all"
-          >
-            <MessageSquarePlus className="w-4 h-4" />
-            <span>New Conversation</span>
-          </button>
-        ) : (
-          <button
-            onClick={handleNewChat}
-            title="New Chat"
-            className="w-10 h-10 mx-auto flex items-center justify-center rounded-xl bg-sky-600 hover:bg-sky-500 text-white shadow-md transition-all"
-          >
-            <MessageSquarePlus className="w-5 h-5" />
-          </button>
-        )}
+        <button
+          onClick={handleNewChat}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-campus-600 hover:from-sky-500 hover:to-campus-500 text-white font-medium text-xs shadow-md shadow-sky-600/20 transition-all"
+        >
+          <MessageSquarePlus className="w-4 h-4" />
+          <span>New Conversation</span>
+        </button>
 
+        {/* Desktop Collapse Toggle */}
         <button
           onClick={onToggle}
           title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+          className="hidden md:flex p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
+
+        {/* Mobile Close Button */}
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            title="Close sidebar"
+            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
-      {/* Search Bar (When Expanded) */}
-      {!isCollapsed && (
-        <div className="p-3 border-b border-slate-800/60">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search chat history..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900/90 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
-            />
-          </div>
+      {/* Search Bar */}
+      <div className="p-3 border-b border-slate-800/60">
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search chat history..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-slate-900/90 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-sky-500 transition-colors"
+          />
         </div>
-      )}
-
+      </div>
       {/* Conversation Thread List */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
         {isLoadingConversations ? (
@@ -289,12 +281,12 @@ export default function Sidebar({ isCollapsed, onToggle }) {
                   <>
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <MessageSquare className={`w-4 h-4 shrink-0 ${isActive ? 'text-sky-400' : 'text-slate-500'}`} />
-                      {!isCollapsed && (
+                      {(!isCollapsed || isMobileOpen) && (
                         <span className="truncate">{conv.title || 'Untitled Conversation'}</span>
                       )}
                     </div>
 
-                    {!isCollapsed && (
+                    {(!isCollapsed || isMobileOpen) && (
                       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => handleStartRename(e, conv)}
@@ -321,7 +313,7 @@ export default function Sidebar({ isCollapsed, onToggle }) {
       </div>
 
       {/* Footer Info */}
-      {!isCollapsed && (
+      {(!isCollapsed || isMobileOpen) && (
         <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 text-[11px] text-slate-500 flex items-center justify-between">
           <span className="flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-sky-400" />
@@ -330,6 +322,41 @@ export default function Sidebar({ isCollapsed, onToggle }) {
           <span>{conversations.length} threads</span>
         </div>
       )}
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* 1. Desktop Sidebar */}
+      <aside
+        ref={sidebarRef}
+        style={{
+          width: isCollapsed ? '4rem' : `${sidebarWidth}px`,
+          minWidth: isCollapsed ? '4rem' : `${MIN_SIDEBAR_WIDTH}px`,
+          maxWidth: isCollapsed ? '4rem' : `${MAX_SIDEBAR_WIDTH}px`,
+        }}
+        className={`hidden md:flex relative border-r border-slate-800/80 bg-slate-950/70 flex-col z-30 shrink-0 ${
+          isResizing ? '' : 'transition-[width] duration-200'
+        }`}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* 2. Mobile Slide-Over Drawer with Backdrop */}
+      {isMobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+            onClick={onCloseMobile}
+          />
+
+          {/* Drawer Panel */}
+          <div className="relative w-4/5 max-w-xs h-full bg-slate-950 border-r border-slate-800 shadow-2xl flex flex-col z-10 animate-slide-right">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
