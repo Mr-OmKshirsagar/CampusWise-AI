@@ -7,6 +7,24 @@ import {
   cosineSimilarity,
 } from '../config/db.js';
 
+// Remove null bytes (\u0000 / 0x00) and unsupported UTF-8 control characters that PostgreSQL rejects
+export function sanitizeUtf8(str) {
+  if (typeof str !== 'string') return str;
+  return str.replace(/\u0000/g, '').replace(/\0/g, '');
+}
+
+export function sanitizeMetadata(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeMetadata);
+  const result = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const cleanKey = sanitizeUtf8(k);
+    result[cleanKey] = typeof v === 'string' ? sanitizeUtf8(v) : sanitizeMetadata(v);
+  }
+  return result;
+}
+
+
 // ==========================================
 // 1. User Model
 // ==========================================
@@ -99,6 +117,10 @@ export const DocumentModel = {
     const adapter = getDbAdapter();
     const id = uuidv4();
     const createdAt = new Date().toISOString();
+    const cleanTitle = sanitizeUtf8(title || 'Untitled');
+    const cleanFilename = sanitizeUtf8(filename || 'document');
+    const cleanFileUrl = sanitizeUtf8(file_url || '');
+    const cleanCategory = sanitizeUtf8(category || 'General');
 
     if (adapter === 'postgres') {
       const pool = getPgPool();
@@ -106,7 +128,7 @@ export const DocumentModel = {
         `INSERT INTO documents (id, title, filename, file_url, category, file_size, chunk_count, uploaded_by, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING *`,
-        [id, title, filename, file_url, category, file_size, chunk_count, uploaded_by, createdAt]
+        [id, cleanTitle, cleanFilename, cleanFileUrl, cleanCategory, file_size, chunk_count, uploaded_by, createdAt]
       );
       return res.rows[0];
     }
@@ -114,10 +136,10 @@ export const DocumentModel = {
     const store = getMemoryStore();
     const newDoc = {
       id,
-      title,
-      filename,
-      file_url,
-      category,
+      title: cleanTitle,
+      filename: cleanFilename,
+      file_url: cleanFileUrl,
+      category: cleanCategory,
       file_size,
       chunk_count,
       uploaded_by,
@@ -216,11 +238,11 @@ export const DocumentChunkModel = {
     const preparedChunks = chunks.map(c => ({
       id: c.id || uuidv4(),
       document_id: c.document_id,
-      content: c.content,
+      content: sanitizeUtf8(c.content || ''),
       chunk_index: c.chunk_index,
       page_number: c.page_number || 1,
       embedding: c.embedding || [],
-      metadata: c.metadata || {},
+      metadata: sanitizeMetadata(c.metadata || {}),
       created_at: new Date().toISOString(),
     }));
 
@@ -547,6 +569,8 @@ export const MessageModel = {
     const adapter = getDbAdapter();
     const id = uuidv4();
     const createdAt = new Date().toISOString();
+    const cleanContent = sanitizeUtf8(content || '');
+    const cleanSources = sanitizeMetadata(sources || []);
 
     if (adapter === 'postgres') {
       const pool = getPgPool();
@@ -554,7 +578,7 @@ export const MessageModel = {
         `INSERT INTO messages (id, conversation_id, sender, content, sources, created_at)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [id, conversationId, sender, content, JSON.stringify(sources), createdAt]
+        [id, conversationId, sender, cleanContent, JSON.stringify(cleanSources), createdAt]
       );
       return res.rows[0];
     }
@@ -564,8 +588,8 @@ export const MessageModel = {
       id,
       conversation_id: conversationId,
       sender,
-      content,
-      sources,
+      content: cleanContent,
+      sources: cleanSources,
       created_at: createdAt,
     };
     store.messages.push(newMsg);

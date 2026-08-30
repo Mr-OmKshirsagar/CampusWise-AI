@@ -62,15 +62,16 @@ export class PdfService {
         let lastY = null;
 
         for (const item of textContent.items) {
+          const sanitizedStr = (item.str || '').replace(/\u0000/g, '').replace(/\0/g, '');
           if (lastY === item.transform[5] || lastY === null) {
-            pageText += (pageText.length > 0 && !pageText.endsWith(' ') && !item.str.startsWith(' ') ? ' ' : '') + item.str;
+            pageText += (pageText.length > 0 && !pageText.endsWith(' ') && !sanitizedStr.startsWith(' ') ? ' ' : '') + sanitizedStr;
           } else {
-            pageText += '\n' + item.str;
+            pageText += '\n' + sanitizedStr;
           }
           lastY = item.transform[5];
         }
 
-        const cleanText = pageText.replace(/[ \t]+/g, ' ').trim();
+        const cleanText = pageText.replace(/\u0000/g, '').replace(/[ \t]+/g, ' ').trim();
         if (cleanText.length > 0) {
           pages.push({
             pageNumber: pageNum,
@@ -113,7 +114,8 @@ export class PdfService {
    */
   static splitText(text, chunkSize = env.rag.chunkSize, chunkOverlap = env.rag.chunkOverlap) {
     if (!text || text.trim().length === 0) return [];
-    if (text.length <= chunkSize) return [text.trim()];
+    const cleanText = text.replace(/\u0000/g, '').replace(/\0/g, '').trim();
+    if (cleanText.length <= chunkSize) return [cleanText];
 
     const separators = ['\n\n', '\n', '. ', '? ', '! ', '; ', ' '];
     const chunks = [];
@@ -154,7 +156,7 @@ export class PdfService {
       }
     };
 
-    splitRecursively(text);
+    splitRecursively(cleanText);
 
     // Apply overlap consolidation if needed
     if (chunkOverlap > 0 && chunks.length > 1) {
@@ -185,20 +187,24 @@ export class PdfService {
   static processDocumentChunks(pages, docMetadata = {}) {
     const allChunks = [];
     let globalChunkIndex = 0;
+    const cleanTitle = (docMetadata.title || 'Untitled Document').replace(/\u0000/g, '').replace(/\0/g, '');
+    const cleanCategory = (docMetadata.category || 'General').replace(/\u0000/g, '').replace(/\0/g, '');
 
     for (const page of pages) {
-      const pageChunks = this.splitText(page.text, env.rag.chunkSize, env.rag.chunkOverlap);
+      const pageText = (page.text || '').replace(/\u0000/g, '').replace(/\0/g, '');
+      const pageChunks = this.splitText(pageText, env.rag.chunkSize, env.rag.chunkOverlap);
 
       for (const chunkContent of pageChunks) {
+        const sanitizedContent = chunkContent.replace(/\u0000/g, '').replace(/\0/g, '');
         allChunks.push({
           document_id: docMetadata.documentId,
-          content: chunkContent,
+          content: sanitizedContent,
           chunk_index: globalChunkIndex++,
           page_number: page.pageNumber,
           metadata: {
-            document_title: docMetadata.title || 'Untitled Document',
-            category: docMetadata.category || 'General',
-            char_count: chunkContent.length,
+            document_title: cleanTitle,
+            category: cleanCategory,
+            char_count: sanitizedContent.length,
             page_number: page.pageNumber,
           },
         });

@@ -95,7 +95,7 @@ CRITICAL FORMATTING RULES:
         const responseText = result.response.text();
         if (responseText && responseText.trim().length > 0) {
           console.log('[OcrService] Successfully extracted text using Gemini Vision OCR.');
-          return responseText.trim();
+          return responseText.replace(/\u0000/g, '').replace(/\0/g, '').trim();
         }
       } catch (err) {
         console.warn(`[OcrService] Gemini Vision OCR failed: ${err.message}. Failing over to backup OCR engines...`);
@@ -134,7 +134,7 @@ Transcribe and extract ALL text, tables, academic calendars, semester dates, hol
 
         if (response.choices && response.choices[0]?.message?.content) {
           console.log('[OcrService] Successfully extracted text using Grok Vision OCR.');
-          return response.choices[0].message.content.trim();
+          return response.choices[0].message.content.replace(/\u0000/g, '').replace(/\0/g, '').trim();
         }
       } catch (err) {
         console.warn(`[OcrService] Grok Vision OCR failed: ${err.message}. Falling back to Tesseract OCR.`);
@@ -148,7 +148,7 @@ Transcribe and extract ALL text, tables, academic calendars, semester dates, hol
       const ret = await worker.recognize(buffer);
       await worker.terminate();
 
-      const extractedText = ret.data.text ? ret.data.text.trim() : '';
+      const extractedText = ret.data.text ? ret.data.text.replace(/\u0000/g, '').replace(/\0/g, '').trim() : '';
       console.log(`[OcrService] Tesseract extracted ${extractedText.length} characters.`);
       return extractedText;
     } catch (err) {
@@ -204,7 +204,7 @@ CRITICAL FORMATTING RULES:
           if (rawPages.length > 1) {
             for (let i = 1; i < rawPages.length; i += 2) {
               const pageNum = parseInt(rawPages[i], 10) || Math.floor(i / 2) + 1;
-              const content = (rawPages[i + 1] || '').trim();
+              const content = (rawPages[i + 1] || '').replace(/\u0000/g, '').replace(/\0/g, '').trim();
               if (content.length > 0) {
                 parsedPages.push({ pageNumber: pageNum, text: content });
               }
@@ -217,7 +217,7 @@ CRITICAL FORMATTING RULES:
           }
 
           // If no page split tags were found, return the whole document as page 1
-          return [{ pageNumber: 1, text: responseText.trim() }];
+          return [{ pageNumber: 1, text: responseText.replace(/\u0000/g, '').replace(/\0/g, '').trim() }];
         }
       } catch (err) {
         console.error(`[OcrService] Gemini PDF OCR failed: ${err.message}`);

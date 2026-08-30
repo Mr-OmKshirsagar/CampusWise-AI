@@ -13,7 +13,7 @@ export class EmbeddingService {
       throw new Error('Text is required to generate embedding.');
     }
 
-    const cleanText = text.replace(/\n+/g, ' ').trim();
+    const cleanText = text.replace(/\u0000/g, '').replace(/\0/g, '').replace(/\n+/g, ' ').trim();
 
     // 1. Attempt Google Gemini Embeddings if API key is provided
     if (env.ai.geminiApiKey && env.ai.geminiApiKey !== 'your_gemini_api_key_here') {
