@@ -1,5 +1,6 @@
 # 🎓 CampusWise AI – Enterprise RAG-Based College Information Assistant
 
+[![Version: v1.1.0](https://img.shields.io/badge/Version-v1.1.0-orange.svg)](https://github.com/Mr-OmKshirsagar/CampusWise-AI/releases/tag/v1.1.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-v20%2B-green.svg)](https://nodejs.org)
 [![React](https://img.shields.io/badge/React-18.3-61dafb.svg)](https://reactjs.org)
@@ -24,6 +25,15 @@
 
 ---
 
+## 🚀 What's New in v1.1.0
+
+* 🌟 **Hardware-Accelerated View Transitions Theme Engine:** Zero-flicker, continuous circular ripple theme switching (Dark "Obsidian Glass" ↔ Light "Pearl Glass") originating from the exact top-center (`50% 0%`) of the screen.
+* 📄 **Fullscreen Document Viewer Modal:** React portal-backed responsive document viewer mounted at `document.body` with fluid maximize/minimize window animations and border-locked scrollbar tracking.
+* 🔐 **One-Click Demo Credentials:** Pre-filled, verified Student (`StudentPassword123!`) and Admin (`AdminPassword123!`) test credentials for instant evaluation.
+* ⚡ **Performance & GPU Pre-Warming:** Optimized layer rasterization, pre-warmed theme GPU cache on boot, and elimination of competing background color transitions.
+
+---
+
 ## ✨ 2. Core & Advanced Features
 
 ### 🔹 Core Features:
@@ -41,7 +51,7 @@
 ### 🌟 Bonus & Advanced Capabilities:
 - **Optical Character Recognition (OCR):** Dual-layer vision OCR (Gemini Vision + Tesseract.js) for scanned college notices.
 - **Centralized Database File Synchronization:** Base64 PDF storage allowing cross-environment previews across localhost and deployed servers.
-- **Mobile Responsive Design:** Slide-over chat drawers, responsive table cards, and full-screen document modals.
+- **Responsive Portal Modals:** Slide-over chat drawers, responsive table cards, and fullscreen portal-mounted document modals.
 - **Analytics & Health Dashboard:** Vector chunk counts, storage metrics, category breakdown charts, and retrieval latency metrics.
 
 ---
@@ -50,7 +60,7 @@
 
 | Layer | Technologies |
 | :--- | :--- |
-| **Frontend** | React 18, Vite 6, Tailwind CSS, Lucide React, Zustand State Management, React Router DOM v6 |
+| **Frontend** | React 18, Vite 6, Tailwind CSS, Lucide React, Zustand State Management, React Router DOM v7, View Transitions API |
 | **Backend** | Node.js (v20+), Express.js, Multer, Helmet, CORS, Morgan, JWT, bcryptjs |
 | **Database & Vector Store** | PostgreSQL + `pgvector` (Supabase Cloud / Local Postgres), Schema Migrations |
 | **AI / LLM & Embeddings** | Google Gemini (`gemini-1.5-flash`, `text-embedding-004`), OpenAI API fallback, Tesseract.js OCR |
