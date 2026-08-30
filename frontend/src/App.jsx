@@ -9,9 +9,15 @@ import ChatPage from './pages/chat/index.jsx';
 import AdminDocumentsPage from './pages/admin/documents.jsx';
 import AdminAnalyticsPage from './pages/admin/analytics.jsx';
 import { useAuthStore } from './store/authStore.js';
+import { useThemeStore } from './store/themeStore.js';
 
 export default function App() {
   const { fetchMe, token } = useAuthStore();
+  const { initTheme } = useThemeStore();
+
+  useEffect(() => {
+    initTheme();
+  }, [initTheme]);
 
   useEffect(() => {
     if (token) {
@@ -21,7 +27,7 @@ export default function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-[#030508] text-slate-100 flex flex-col font-sans selection:bg-sky-500 selection:text-white">
+      <div className="min-h-screen bg-[#f8fafc] dark:bg-[#030508] text-slate-900 dark:text-slate-100 flex flex-col font-sans selection:bg-sky-500 selection:text-white transition-colors duration-300">
         <Navbar />
         <div className="flex-1">
           <Routes>

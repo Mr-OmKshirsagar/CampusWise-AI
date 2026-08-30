@@ -190,14 +190,16 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
         onClick={() => !isEditing && handleSelect(conv.id)}
         className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 text-xs ${
           isSelected
-            ? 'bg-sky-500/20 text-sky-200 border border-sky-500/35 shadow-glow-cyan'
-            : 'text-slate-300 hover:text-white hover:bg-white/[0.05] border border-transparent'
+            ? 'bg-sky-500/15 dark:bg-sky-500/20 text-sky-700 dark:text-sky-200 border border-sky-500/30 dark:border-sky-500/35 shadow-sm dark:shadow-glow-cyan font-bold'
+            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.05] border border-transparent'
         }`}
       >
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <MessageSquare
             className={`w-3.5 h-3.5 shrink-0 ${
-              isSelected ? 'text-sky-400' : 'text-slate-400 group-hover:text-slate-200'
+              isSelected
+                ? 'text-sky-600 dark:text-sky-400'
+                : 'text-slate-400 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'
             }`}
           />
 
@@ -212,10 +214,10 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
                 if (e.key === 'Escape') handleCancelRename(e);
               }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-black/60 border border-sky-500/50 rounded px-2 py-0.5 text-xs text-white focus:outline-none w-full"
+              className="bg-white dark:bg-black/60 border border-sky-500 rounded px-2 py-0.5 text-xs text-slate-900 dark:text-white focus:outline-none w-full"
             />
           ) : (
-            <span className="truncate font-medium">{conv.title || 'New Conversation'}</span>
+            <span className="truncate">{conv.title || 'New Conversation'}</span>
           )}
         </div>
 
@@ -225,14 +227,14 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
             <>
               <button
                 onClick={(e) => handleSaveRename(e, conv.id)}
-                className="p-1 text-emerald-400 hover:bg-emerald-500/20 rounded"
+                className="p-1 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded"
                 title="Save title"
               >
                 <Check className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={handleCancelRename}
-                className="p-1 text-rose-400 hover:bg-rose-500/20 rounded"
+                className="p-1 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 rounded"
                 title="Cancel"
               >
                 <X className="w-3.5 h-3.5" />
@@ -242,14 +244,14 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
             <>
               <button
                 onClick={(e) => handleStartRename(e, conv)}
-                className="p-1 text-slate-400 hover:text-white hover:bg-white/[0.1] rounded transition-colors"
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.1] rounded transition-colors"
                 title="Rename conversation"
               >
                 <Edit2 className="w-3 h-3" />
               </button>
               <button
                 onClick={(e) => handleDelete(e, conv.id)}
-                className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-500/15 rounded transition-colors"
+                className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/15 rounded transition-colors"
                 title="Delete conversation"
               >
                 <Trash2 className="w-3 h-3" />
@@ -262,12 +264,12 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#070b12]/95 backdrop-blur-xl border-r border-white/[0.08] relative select-none">
+    <div className="flex flex-col h-full bg-white/80 dark:bg-[#070b12]/95 backdrop-blur-xl border-r border-slate-200/80 dark:border-white/[0.08] relative select-none transition-colors duration-300">
       {/* Top Header & New Chat Button */}
-      <div className="p-3.5 space-y-3 border-b border-white/[0.08] bg-white/[0.01]">
+      <div className="p-3.5 space-y-3 border-b border-slate-200/80 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.01]">
         <button
           onClick={handleNewChat}
-          className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-glow-blue flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-sm dark:shadow-glow-blue flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
           <MessageSquarePlus className="w-4 h-4" />
           <span>New Conversation</span>
@@ -281,12 +283,12 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search conversations..."
-            className="w-full glass-input rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 transition-all"
+            className="w-full glass-input rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-2 text-slate-400 hover:text-white"
+              className="absolute right-2.5 top-2 text-slate-400 hover:text-slate-700 dark:hover:text-white"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -305,17 +307,17 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
         ) : conversations.length === 0 ? (
           <div className="text-center py-10 px-4 space-y-2">
             <div className="w-10 h-10 rounded-2xl glass-icon-box flex items-center justify-center mx-auto text-slate-400">
-              <Bot className="w-5 h-5 text-sky-400" />
+              <Bot className="w-5 h-5 text-sky-500 dark:text-sky-400" />
             </div>
-            <p className="text-xs text-slate-300 font-medium">No conversations yet</p>
+            <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">No conversations yet</p>
             <p className="text-[11px] text-slate-500">Ask a question to start your grounded RAG session.</p>
           </div>
         ) : (
           <>
             {groupedConversations.today.length > 0 && (
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 flex items-center gap-1.5">
-                  <Clock className="w-3 h-3 text-sky-400" /> Today
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-sky-500 dark:text-sky-400" /> Today
                 </span>
                 {groupedConversations.today.map(renderConvItem)}
               </div>
@@ -323,8 +325,8 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
 
             {groupedConversations.yesterday.length > 0 && (
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 flex items-center gap-1.5">
-                  <Clock className="w-3 h-3 text-indigo-400" /> Yesterday
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-indigo-500 dark:text-indigo-400" /> Yesterday
                 </span>
                 {groupedConversations.yesterday.map(renderConvItem)}
               </div>
@@ -332,8 +334,8 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
 
             {groupedConversations.lastWeek.length > 0 && (
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 flex items-center gap-1.5">
-                  <Clock className="w-3 h-3 text-purple-400" /> Previous 7 Days
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 text-purple-500 dark:text-purple-400" /> Previous 7 Days
                 </span>
                 {groupedConversations.lastWeek.map(renderConvItem)}
               </div>
@@ -341,7 +343,7 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
 
             {groupedConversations.older.length > 0 && (
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 flex items-center gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-2 flex items-center gap-1.5">
                   <Clock className="w-3 h-3 text-slate-400" /> Older
                 </span>
                 {groupedConversations.older.map(renderConvItem)}
@@ -352,10 +354,10 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
       </div>
 
       {/* Footer Info Pill */}
-      <div className="p-3 border-t border-white/[0.08] bg-white/[0.01]">
-        <div className="px-3 py-2 rounded-xl glass-badge flex items-center justify-between text-[10px] text-slate-400">
-          <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+      <div className="p-3 border-t border-slate-200/80 dark:border-white/[0.08] bg-slate-50/50 dark:bg-white/[0.01]">
+        <div className="px-3 py-2 rounded-xl glass-badge flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+          <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             pgvector Ready
           </span>
           <span className="font-mono">{conversations.length} threads</span>
@@ -388,7 +390,7 @@ export default function Sidebar({ isCollapsed, onToggle, isMobileOpen, onCloseMo
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex">
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={onCloseMobile}
           />
           <div className="relative w-[85%] max-w-xs h-full z-10 animate-slide-in-right">

@@ -17,7 +17,7 @@ export default function ChatPage() {
   }, [id, selectConversation]);
 
   return (
-    <div className="flex h-[calc(100dvh-4rem)] overflow-hidden bg-[#030508] relative bg-ambient-mesh selection:bg-sky-500 selection:text-white">
+    <div className="flex h-[calc(100dvh-4rem)] overflow-hidden bg-[#f8fafc] dark:bg-[#030508] relative bg-ambient-mesh selection:bg-sky-500 selection:text-white transition-colors duration-300">
       {/* Conversation Thread Sidebar (Desktop + Mobile Drawer) */}
       <Sidebar
         isCollapsed={isSidebarCollapsed}

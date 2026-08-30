@@ -70,8 +70,8 @@ export default function RagPipelineVisualizer() {
               onClick={() => setActiveStep(idx)}
               className={`text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 relative overflow-hidden group ${
                 isActive
-                  ? 'glass-panel-elevated border-sky-500/50 shadow-glow-blue scale-[1.02]'
-                  : 'glass-card border-white/[0.08] hover:border-white/[0.18]'
+                  ? 'glass-panel-elevated border-sky-500/50 shadow-md dark:shadow-glow-blue scale-[1.02]'
+                  : 'glass-card border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.18]'
               }`}
             >
               {/* Active Ambient Glow */}
@@ -82,7 +82,7 @@ export default function RagPipelineVisualizer() {
               <div className="flex items-center justify-between mb-3">
                 <span
                   className={`text-xs font-mono font-black ${
-                    isActive ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-300'
+                    isActive ? 'text-sky-600 dark:text-sky-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
                   }`}
                 >
                   PHASE {step.stepNum}
@@ -90,17 +90,17 @@ export default function RagPipelineVisualizer() {
                 <GlassIcon icon={step.icon} variant={step.variant} size="sm" />
               </div>
 
-              <h4 className="font-display font-bold text-sm sm:text-base text-white leading-snug mb-1">
+              <h4 className="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug mb-1">
                 {step.title}
               </h4>
-              <p className="text-xs text-slate-400 line-clamp-1">{step.subtitle}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{step.subtitle}</p>
 
               {/* Bottom Active Progress Line */}
               <div
                 className={`mt-3 h-1 rounded-full transition-all duration-300 ${
                   isActive
-                    ? 'bg-gradient-to-r from-sky-400 to-indigo-500 w-full'
-                    : 'bg-white/[0.06] w-8 group-hover:w-16'
+                    ? 'bg-gradient-to-r from-sky-500 to-indigo-600 w-full'
+                    : 'bg-slate-200 dark:bg-white/[0.06] w-8 group-hover:w-16'
                 }`}
               />
             </button>
@@ -109,37 +109,37 @@ export default function RagPipelineVisualizer() {
       </div>
 
       {/* Detailed Active Step Showcase */}
-      <div className="glass-panel-elevated p-5 sm:p-7 rounded-3xl border border-white/[0.12] relative overflow-hidden shadow-glass-lg">
+      <div className="glass-panel-elevated p-5 sm:p-7 rounded-3xl border border-slate-200 dark:border-white/[0.12] relative overflow-hidden shadow-sm dark:shadow-glass-lg">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2.5 max-w-2xl">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-300 border border-sky-500/30">
+              <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/30">
                 Active Architecture Stage
               </span>
-              <span className="text-xs font-mono text-slate-400">
+              <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                 Phase {steps[activeStep].stepNum} of 04
               </span>
             </div>
 
-            <h3 className="font-display font-extrabold text-lg sm:text-2xl text-white tracking-tight">
+            <h3 className="font-display font-extrabold text-lg sm:text-2xl text-slate-900 dark:text-white tracking-tight">
               {steps[activeStep].title} –{' '}
-              <span className="text-slate-300 font-medium text-base sm:text-xl">
+              <span className="text-slate-600 dark:text-slate-300 font-medium text-base sm:text-xl">
                 {steps[activeStep].subtitle}
               </span>
             </h3>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               {steps[activeStep].desc}
             </p>
           </div>
 
           {/* Metric Highlight Box */}
-          <div className="w-full md:w-auto p-4 rounded-2xl glass-input border-white/[0.1] shrink-0 text-center sm:text-left space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+          <div className="w-full md:w-auto p-4 rounded-2xl glass-input border-slate-200 dark:border-white/[0.1] shrink-0 text-center sm:text-left space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
               Technical Specification
             </span>
-            <div className="text-xs sm:text-sm font-mono font-bold text-sky-400 flex items-center justify-center sm:justify-start gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <div className="text-xs sm:text-sm font-mono font-bold text-sky-600 dark:text-sky-400 flex items-center justify-center sm:justify-start gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>{steps[activeStep].metric}</span>
             </div>
           </div>
