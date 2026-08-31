@@ -163,7 +163,7 @@
 
 /* 🌟 View Transitions API - Hardware-Accelerated Continuous Circular Reveal */
 ::view-transition-group(root) {
-  animation-duration: 1400ms !important;
+  animation-duration: 2400ms !important;
 }
 
 ::view-transition-image-pair(root),
@@ -420,4 +420,74 @@
 
 .dark .markdown-body th {
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* RAG Topology & Showcase Transition Animations */
+@keyframes stageContentReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes metricBounce {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateX(12px);
+  }
+  60% {
+    transform: scale(1.02) translateX(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateX(0);
+  }
+}
+
+@keyframes stagePulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.animate-stage-reveal {
+  animation: stageContentReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-metric-pop {
+  animation: metricBounce 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.06s both;
+}
+
+.animate-stage-glow {
+  animation: stagePulseGlow 3.5s ease-in-out infinite;
+}
+
+/* Password Toggle Icon Pop Animation */
+@keyframes iconPop {
+  0% {
+    transform: scale(0.6) rotate(-25deg);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.18) rotate(6deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-icon-pop {
+  animation: iconPop 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

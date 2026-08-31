@@ -128,7 +128,7 @@ export default function Navbar() {
               <ThemeToggle />
               <Link
                 to="/login"
-                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white glass-badge hover:bg-black/5 dark:hover:bg-white/[0.08] transition-all"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-300 glass-badge hover:bg-sky-500/[0.08] dark:hover:bg-white/[0.08] hover:border-sky-500/40 transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm"
               >
                 Sign In
               </Link>

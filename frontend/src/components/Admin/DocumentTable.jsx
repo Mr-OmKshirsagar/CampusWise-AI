@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { documentApi } from '../../services/api.js';
 import GlassIcon from '../Common/GlassIcon.jsx';
+import Pagination from '../Common/Pagination.jsx';
 
 export default function DocumentTable({ documents = [], onDocumentDeleted, onSelectDocument }) {
   const [search, setSearch] = useState('');
@@ -289,34 +290,16 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
         )}
       </div>
 
-      {/* Pagination Footer (CSS Flexbox) */}
-      <div className="p-3 sm:p-4 sm:px-6 border-t border-slate-200/80 dark:border-white/[0.08] flex flex-col xs:flex-row items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400 bg-slate-50/50 dark:bg-white/[0.01]">
-        <div>
-          Showing <span className="font-bold text-slate-900 dark:text-white">{filteredDocs.length > 0 ? startIndex + 1 : 0}</span> to{' '}
-          <span className="font-bold text-slate-900 dark:text-white">{endIndex}</span> of{' '}
-          <span className="font-bold text-slate-900 dark:text-white">{filteredDocs.length}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={validCurrentPage <= 1}
-            className="p-1.5 rounded-xl glass-badge hover:text-slate-900 dark:hover:text-white disabled:opacity-40 transition-all"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="font-mono text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs">
-            {validCurrentPage} / {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={validCurrentPage >= totalPages}
-            className="p-1.5 rounded-xl glass-badge hover:text-slate-900 dark:hover:text-white disabled:opacity-40 transition-all"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      {/* Pagination Footer */}
+      {filteredDocs.length > 0 && (
+        <Pagination
+          currentPage={validCurrentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+          totalItems={filteredDocs.length}
+          pageSize={pageSize}
+        />
+      )}
     </div>
   );
 }

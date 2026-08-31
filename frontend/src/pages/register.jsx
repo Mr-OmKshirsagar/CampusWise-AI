@@ -146,22 +146,37 @@ export default function RegisterPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wide">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+              <div className="relative group">
+                <Lock
+                  className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors duration-300 ${
+                    showPassword ? 'text-sky-500 dark:text-sky-400' : 'text-slate-400'
+                  }`}
+                />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="w-full glass-input rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all"
+                  className={`w-full glass-input rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all duration-300 ${
+                    showPassword
+                      ? 'border-sky-500/40 ring-2 ring-sky-500/20 font-mono tracking-normal'
+                      : 'tracking-wider'
+                  }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors duration-200 active:scale-75 focus:outline-none cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <span key={showPassword ? 'hide' : 'show'} className="inline-block animate-icon-pop">
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4 text-sky-500 dark:text-sky-400" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </span>
                 </button>
               </div>
 

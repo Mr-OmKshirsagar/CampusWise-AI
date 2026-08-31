@@ -76,7 +76,7 @@ export const useThemeStore = create((set, get) => ({
         const width = Math.max(window.innerWidth || 0, doc.clientWidth || 0, doc.scrollWidth || 0);
         const height = Math.max(window.innerHeight || 0, doc.clientHeight || 0, doc.scrollHeight || 0);
         const maxDistance = Math.hypot(width / 2, height);
-        const endRadius = Math.ceil(maxDistance * 1.5);
+        const endRadius = Math.ceil(maxDistance * 1.4);
 
         const transition = document.startViewTransition(() => {
           applyTheme();
@@ -149,7 +149,7 @@ export const useThemeStore = create((set, get) => ({
         const width = Math.max(window.innerWidth || 0, doc.clientWidth || 0, doc.scrollWidth || 0);
         const height = Math.max(window.innerHeight || 0, doc.clientHeight || 0, doc.scrollHeight || 0);
         const maxDistance = Math.hypot(width / 2, height);
-        const endRadius = Math.ceil(maxDistance * 1.5);
+        const endRadius = Math.ceil(maxDistance * 1.4);
 
         const transition = document.startViewTransition(() => {
           applyTheme();
@@ -190,3 +190,4 @@ export const useThemeStore = create((set, get) => ({
     }
   },
 }));
+
