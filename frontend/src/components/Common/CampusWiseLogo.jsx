@@ -1,7 +1,7 @@
 import React from 'react';
 import { useServerHealthStore } from '../../store/serverHealthStore.js';
 
-export default function CampusWiseLogo({ size = 'md', showText = true, badgeText = 'RAG v1.1' }) {
+export default function CampusWiseLogo({ size = 'md', showText = true, badgeText = 'RAG v1.2' }) {
   const { status } = useServerHealthStore();
 
   const sizeMap = {
