@@ -678,7 +678,7 @@ export default function LandingPage() {
 
                 {/* Big Metric Value */}
                 <div
-                  className={`font-display text-base xs:text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-mono relative z-10 transition-all duration-300 ${item.valueColor}`}
+                  className={`font-display text-base xs:text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight relative z-10 transition-all duration-300 ${item.valueColor}`}
                 >
                   {item.value}
                 </div>

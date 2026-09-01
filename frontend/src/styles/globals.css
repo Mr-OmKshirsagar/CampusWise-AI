@@ -469,26 +469,14 @@
   border-collapse: separate;
   border-spacing: 0;
   margin-bottom: 0.75rem;
-  font-size: 0.85rem;
-  border-radius: 1rem;
-  overflow: hidden;
-  border: 1px solid var(--glass-border);
+  font-size: 0.825rem;
 }
 
 .markdown-body th,
 .markdown-body td {
-  border-bottom: 1px solid var(--glass-border);
-  border-right: 1px solid var(--glass-border);
-  padding: 0.6rem 0.9rem;
-}
-
-.markdown-body th:last-child,
-.markdown-body td:last-child {
-  border-right: none;
-}
-
-.markdown-body tr:last-child td {
-  border-bottom: none;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .markdown-body th {

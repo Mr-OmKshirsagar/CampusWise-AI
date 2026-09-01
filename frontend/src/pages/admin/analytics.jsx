@@ -381,7 +381,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             <div>
-              <div className="font-display text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
+              <div className="font-display text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 <AnimatedCounter
                   key={`chunks-${selectedTimeframe}-${activeMetrics?.totalChunks}`}
                   value={activeMetrics?.totalChunks || 0}
@@ -414,7 +414,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             <div>
-              <div className="font-display text-3xl sm:text-4xl font-extrabold text-purple-600 dark:text-purple-400 font-mono tracking-tight">
+              <div className="font-display text-3xl sm:text-4xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
                 <AnimatedCounter
                   key={`conf-${selectedTimeframe}-${activeMetrics?.confidence}`}
                   value={activeMetrics?.confidence || 100}
@@ -447,7 +447,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             <div>
-              <div className="font-display text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
+              <div className="font-display text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
                 <AnimatedCounter
                   key={`lat-${selectedTimeframe}-${activeMetrics?.latency}`}
                   value={activeMetrics?.latency || 45}
@@ -480,7 +480,7 @@ export default function AdminAnalyticsPage() {
             </div>
 
             <div>
-              <div className="font-display text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
+              <div className="font-display text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                 <AnimatedCounter
                   key={`docs-${selectedTimeframe}-${activeMetrics?.totalDocuments}`}
                   value={activeMetrics?.totalDocuments || 0}

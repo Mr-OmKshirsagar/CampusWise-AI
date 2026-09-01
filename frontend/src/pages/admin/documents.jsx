@@ -186,7 +186,7 @@ export default function AdminDocumentsPage() {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] w-full max-w-full overflow-x-hidden p-2.5 xs:p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
+    <div className="min-h-[calc(100dvh-4rem)] w-full overflow-x-hidden p-2.5 xs:p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
       {/* ══════════════════════════════════════════════════════════════
           1. HEADER & DYNAMIC SITUATIONAL REFRESH BUTTON
          ══════════════════════════════════════════════════════════════ */}
@@ -281,7 +281,7 @@ export default function AdminDocumentsPage() {
               </div>
 
               <div>
-                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
+                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                   <AnimatedCounter value={stats.totalDocuments || 0} duration={1200} />
                 </div>
                 <p className="text-[10px] xs:text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
@@ -308,7 +308,7 @@ export default function AdminDocumentsPage() {
               </div>
 
               <div>
-                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-purple-600 dark:text-purple-400 font-mono tracking-tight">
+                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
                   <AnimatedCounter value={stats.totalChunks || 0} duration={1300} />
                 </div>
                 <p className="text-[10px] xs:text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
@@ -335,7 +335,7 @@ export default function AdminDocumentsPage() {
               </div>
 
               <div>
-                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
+                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
                   <AnimatedCounter
                     value={stats.totalStorageBytes ? stats.totalStorageBytes / (1024 * 1024) : 0}
                     decimals={2}
