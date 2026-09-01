@@ -12,13 +12,19 @@ export class DocumentService {
   /**
    * Processes and indexes an uploaded PDF document
    */
-  static async ingestDocument({ file, title, category, userId }) {
+  static async ingestDocument({ file, title, category, userId, replaceDocumentId = null, onProgress = null }) {
     if (!file) {
       throw new Error('File payload is missing.');
     }
 
     const docTitle = (title || file.originalname.replace(/\.[^/.]+$/, '')).trim();
     const docCategory = category || 'General';
+
+    onProgress?.({
+      stage: 'reading',
+      progress: 15,
+      message: 'Validating payload & parsing file buffer streams...',
+    });
 
     // Read buffer for persistent storage across environments
     let fileBuffer = null;
@@ -28,38 +34,145 @@ export class DocumentService {
       fileBuffer = fs.readFileSync(file.path);
     }
     const fileBase64 = fileBuffer ? fileBuffer.toString('base64') : null;
+    const fileSize = file.size || (fileBuffer ? fileBuffer.length : 0);
 
+    // ── CASE A: REPLACING / UPDATING AN EXISTING DOCUMENT ──
+    if (replaceDocumentId) {
+      const existingDoc = await DocumentModel.findById(replaceDocumentId);
+      if (!existingDoc) {
+        throw new Error('Target document to replace does not exist.');
+      }
+
+      onProgress?.({
+        stage: 'extracting',
+        progress: 25,
+        message: 'Extracting page text and layout geometry from replacement document...',
+      });
+
+      // 1. Extract page-by-page text from new file
+      const pages = await PdfService.extractTextWithPages(file.path || file.buffer, file.mimetype, onProgress);
+      if (!pages || pages.length === 0) {
+        throw new Error('No readable text content found in the provided replacement document.');
+      }
+
+      // 2. Perform semantic recursive text chunking
+      onProgress?.({
+        stage: 'chunking',
+        progress: 60,
+        message: `Performing recursive semantic chunking across ${pages.length} pages...`,
+      });
+      const rawChunks = PdfService.processDocumentChunks(pages, {
+        documentId: replaceDocumentId,
+        title: docTitle,
+        category: docCategory,
+      });
+
+      onProgress?.({
+        stage: 'chunking_complete',
+        progress: 70,
+        message: `Generated ${rawChunks.length} semantic chunks. Clearing obsolete vectors...`,
+      });
+
+      // 3. Clear old vector chunks for this document
+      await DocumentChunkModel.deleteByDocumentId(replaceDocumentId);
+
+      // 4. Generate fresh embeddings and index in vector store
+      onProgress?.({
+        stage: 'vectorizing',
+        progress: 75,
+        message: `Generating 768-dim embeddings for ${rawChunks.length} chunks in vector store...`,
+      });
+      const indexedChunks = await VectorStoreService.indexChunks(rawChunks, onProgress);
+
+      // 5. Update existing document metadata, file data, and chunk count
+      onProgress?.({
+        stage: 'finalizing',
+        progress: 95,
+        message: 'Updating document metadata & synchronizing Knowledge Base records...',
+      });
+      const updatedDoc = await DocumentModel.update({
+        id: replaceDocumentId,
+        title: docTitle,
+        filename: file.filename || file.originalname,
+        file_url: `/uploads/${file.filename || file.originalname}`,
+        file_data: fileBase64,
+        category: docCategory,
+        file_size: fileSize,
+        chunk_count: indexedChunks.length,
+      });
+
+      return {
+        document: updatedDoc,
+        totalPages: pages.length,
+        totalChunks: indexedChunks.length,
+        isUpdate: true,
+        previousTitle: existingDoc.title,
+      };
+    }
+
+    // ── CASE B: CREATING A NEW DOCUMENT ──
     // 1. Create base document record with file_data
+    onProgress?.({
+      stage: 'init_record',
+      progress: 20,
+      message: 'Creating institutional document record in database...',
+    });
     const document = await DocumentModel.create({
       title: docTitle,
       filename: file.filename || file.originalname,
       file_url: `/uploads/${file.filename || file.originalname}`,
       file_data: fileBase64,
       category: docCategory,
-      file_size: file.size || (fileBuffer ? fileBuffer.length : 0),
+      file_size: fileSize,
       chunk_count: 0,
       uploaded_by: userId,
     });
 
     try {
       // 2. Extract page-by-page text from PDF or Image document
-      const pages = await PdfService.extractTextWithPages(file.path || file.buffer, file.mimetype);
+      onProgress?.({
+        stage: 'extracting',
+        progress: 25,
+        message: 'Extracting page text and layout geometry from document...',
+      });
+      const pages = await PdfService.extractTextWithPages(file.path || file.buffer, file.mimetype, onProgress);
 
       if (!pages || pages.length === 0) {
         throw new Error('No readable text content found in the provided document.');
       }
 
       // 3. Perform semantic recursive text chunking
+      onProgress?.({
+        stage: 'chunking',
+        progress: 60,
+        message: `Performing recursive semantic chunking across ${pages.length} pages...`,
+      });
       const rawChunks = PdfService.processDocumentChunks(pages, {
         documentId: document.id,
         title: docTitle,
         category: docCategory,
       });
 
+      onProgress?.({
+        stage: 'chunking_complete',
+        progress: 70,
+        message: `Generated ${rawChunks.length} semantic chunks. Indexing vector store...`,
+      });
+
       // 4. Generate embeddings and index in vector store
-      const indexedChunks = await VectorStoreService.indexChunks(rawChunks);
+      onProgress?.({
+        stage: 'vectorizing',
+        progress: 75,
+        message: `Generating 768-dim embeddings for ${rawChunks.length} chunks in pgvector...`,
+      });
+      const indexedChunks = await VectorStoreService.indexChunks(rawChunks, onProgress);
 
       // 5. Update document chunk count
+      onProgress?.({
+        stage: 'finalizing',
+        progress: 95,
+        message: 'Finalizing document record & linking pgvector embeddings...',
+      });
       await DocumentModel.updateChunkCount(document.id, indexedChunks.length);
       document.chunk_count = indexedChunks.length;
 
@@ -67,6 +180,7 @@ export class DocumentService {
         document,
         totalPages: pages.length,
         totalChunks: indexedChunks.length,
+        isUpdate: false,
       };
     } catch (err) {
       // Cleanup document record if parsing/indexing fails

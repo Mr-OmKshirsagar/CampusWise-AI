@@ -57,9 +57,10 @@ export class EmbeddingService {
   /**
    * Generates embeddings in batches for multiple chunks
    * @param {string[]} texts
+   * @param {Function} [onProgress]
    * @returns {Promise<number[][]>}
    */
-  static async generateBatchEmbeddings(texts) {
+  static async generateBatchEmbeddings(texts, onProgress = null) {
     if (!texts || texts.length === 0) return [];
     const embeddings = [];
 
@@ -70,6 +71,16 @@ export class EmbeddingService {
       const batchPromises = batch.map(t => this.generateEmbedding(t));
       const batchResults = await Promise.all(batchPromises);
       embeddings.push(...batchResults);
+
+      if (onProgress) {
+        const completedCount = Math.min(i + batchSize, texts.length);
+        const percent = Math.round(72 + (completedCount / texts.length) * 20);
+        onProgress({
+          stage: 'vectorizing',
+          progress: percent,
+          message: `Generating 768-dim embeddings: ${completedCount} of ${texts.length} chunks indexed in pgvector...`,
+        });
+      }
     }
 
     return embeddings;

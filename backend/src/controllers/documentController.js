@@ -5,20 +5,78 @@ export class DocumentController {
    * POST /api/admin/documents/upload
    */
   static async upload(req, res, next) {
+    const isStreaming = req.query.stream === 'true' || req.headers.accept?.includes('text/event-stream');
+
+    if (isStreaming) {
+      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+      res.flushHeaders?.();
+
+      const sendProgress = (payload) => {
+        try {
+          res.write(`data: ${JSON.stringify(payload)}\n\n`);
+        } catch (_) {}
+      };
+
+      try {
+        const { title, category, replaceDocumentId } = req.body;
+        const file = req.file;
+
+        sendProgress({
+          stage: 'upload',
+          progress: 10,
+          message: 'Uploaded file payload received & validating structural format...',
+        });
+
+        const result = await DocumentService.ingestDocument({
+          file,
+          title,
+          category,
+          replaceDocumentId: replaceDocumentId || null,
+          userId: req.user.id,
+          onProgress: sendProgress,
+        });
+
+        sendProgress({
+          stage: 'complete',
+          progress: 100,
+          success: true,
+          message: result.isUpdate
+            ? 'Vector embeddings successfully re-indexed and document updated in pgvector!'
+            : 'Vector embeddings successfully indexed into pgvector database!',
+          data: result,
+        });
+        return res.end();
+      } catch (err) {
+        sendProgress({
+          stage: 'error',
+          progress: 0,
+          error: err.message || 'Failed to ingest document.',
+        });
+        return res.end();
+      }
+    }
+
+    // Standard non-streaming fallback
     try {
-      const { title, category } = req.body;
+      const { title, category, replaceDocumentId } = req.body;
       const file = req.file;
 
       const result = await DocumentService.ingestDocument({
         file,
         title,
         category,
+        replaceDocumentId: replaceDocumentId || null,
         userId: req.user.id,
       });
 
       return res.status(201).json({
         success: true,
-        message: 'Document successfully ingested and indexed into vector store.',
+        message: result.isUpdate
+          ? 'Document successfully updated and re-indexed into vector store.'
+          : 'Document successfully ingested and indexed into vector store.',
         data: result,
       });
     } catch (err) {

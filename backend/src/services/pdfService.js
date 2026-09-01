@@ -16,9 +16,10 @@ export class PdfService {
    * Extracts text page-by-page from a PDF or Image buffer / file path
    * @param {Buffer|string} input - PDF or Image buffer or file path
    * @param {string} mimeType - Optional MIME type
+   * @param {Function} [onProgress]
    * @returns {Promise<Array<{ pageNumber: number, text: string }>>}
    */
-  static async extractTextWithPages(input, mimeType = null) {
+  static async extractTextWithPages(input, mimeType = null, onProgress = null) {
     let dataBuffer;
     let filePath = null;
     if (typeof input === 'string') {
@@ -32,7 +33,17 @@ export class PdfService {
     // 1. Direct Image Processing (PNG, JPG, JPEG, WEBP)
     if (OcrService.isImage(mimeType) || (filePath && OcrService.isImage(filePath))) {
       console.log(`[PdfService] Processing uploaded image document via OCR (${mimeType || 'image'})...`);
+      onProgress?.({
+        stage: 'ocr_image',
+        progress: 35,
+        message: 'Processing document image with Gemini Multimodal Vision OCR...',
+      });
       const extractedText = await OcrService.extractTextFromImage(dataBuffer, mimeType || 'image/png');
+      onProgress?.({
+        stage: 'ocr_complete',
+        progress: 55,
+        message: 'Document OCR completed. Preparing semantic chunking...',
+      });
       return [
         {
           pageNumber: 1,
@@ -43,6 +54,12 @@ export class PdfService {
 
     // 2. PDF Document Processing
     try {
+      onProgress?.({
+        stage: 'pdf_parse',
+        progress: 25,
+        message: 'Parsing PDF document structure, fonts & layout stream...',
+      });
+
       const uint8Array = new Uint8Array(dataBuffer);
       const loadingTask = pdfjsLib.getDocument({
         data: uint8Array,
@@ -84,8 +101,18 @@ export class PdfService {
       const totalTextLength = pages.reduce((sum, p) => sum + p.text.length, 0);
       if (pages.length === 0 || totalTextLength < 40 * numPages) {
         console.log(`[PdfService] PDF has sparse/empty text layer (${totalTextLength} chars across ${numPages} pages). Running Multimodal Scanned PDF OCR...`);
+        onProgress?.({
+          stage: 'ocr_pdf',
+          progress: 40,
+          message: `PDF has sparse text layer. Processing ${numPages} scanned pages with Gemini Multimodal Vision OCR...`,
+        });
         const ocrPages = await OcrService.extractTextFromPdf(dataBuffer);
         if (ocrPages && ocrPages.length > 0) {
+          onProgress?.({
+            stage: 'ocr_complete',
+            progress: 55,
+            message: `Multimodal Vision OCR successfully transcribed ${ocrPages.length} scanned pages.`,
+          });
           return ocrPages;
         }
       }
@@ -94,9 +121,20 @@ export class PdfService {
         throw new Error('No text could be extracted from the provided PDF document.');
       }
 
+      onProgress?.({
+        stage: 'pdf_parsed',
+        progress: 50,
+        message: `Extracted structured text layer across ${pages.length} PDF pages.`,
+      });
+
       return pages;
     } catch (err) {
       console.warn(`[PdfService] Standard PDF parsing encountered error: ${err.message}. Attempting Multimodal OCR fallback...`);
+      onProgress?.({
+        stage: 'ocr_fallback',
+        progress: 40,
+        message: 'Parsing fallback: Processing scanned document with Gemini Multimodal Vision...',
+      });
       const ocrPages = await OcrService.extractTextFromPdf(dataBuffer);
       if (ocrPages && ocrPages.length > 0) {
         return ocrPages;

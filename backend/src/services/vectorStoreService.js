@@ -6,9 +6,10 @@ export class VectorStoreService {
   /**
    * Stores chunks with their computed embedding vectors
    * @param {Array<object>} chunks
+   * @param {Function} [onProgress]
    * @returns {Promise<Array<object>>}
    */
-  static async indexChunks(chunks) {
+  static async indexChunks(chunks, onProgress = null) {
     if (!chunks || chunks.length === 0) return [];
 
     // Include document title and category in embedding representation
@@ -17,7 +18,7 @@ export class VectorStoreService {
       const category = c.metadata?.category || '';
       return `${docTitle} ${category} ${c.content}`;
     });
-    const embeddings = await EmbeddingService.generateBatchEmbeddings(texts);
+    const embeddings = await EmbeddingService.generateBatchEmbeddings(texts, onProgress);
 
     const chunksWithEmbeddings = chunks.map((chunk, index) => ({
       ...chunk,

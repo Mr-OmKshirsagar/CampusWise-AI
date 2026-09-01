@@ -236,6 +236,40 @@ export const DocumentModel = {
     return deletedDoc;
   },
 
+  async update({ id, title, filename, file_url, file_data = null, category = 'General', file_size = 0, chunk_count = 0 }) {
+    const adapter = getDbAdapter();
+    const cleanTitle = sanitizeUtf8(title || 'Untitled');
+    const cleanFilename = sanitizeUtf8(filename || 'document');
+    const cleanFileUrl = sanitizeUtf8(file_url || '');
+    const cleanCategory = sanitizeUtf8(category || 'General');
+
+    if (adapter === 'postgres') {
+      const pool = getPgPool();
+      const res = await pool.query(
+        `UPDATE documents
+         SET title = $1, filename = $2, file_url = $3, file_data = COALESCE($4, file_data), category = $5, file_size = $6, chunk_count = $7
+         WHERE id = $8
+         RETURNING id, title, filename, file_url, category, file_size, chunk_count, uploaded_by, created_at`,
+        [cleanTitle, cleanFilename, cleanFileUrl, file_data, cleanCategory, file_size, chunk_count, id]
+      );
+      return res.rows[0] || null;
+    }
+
+    const store = getMemoryStore();
+    const doc = store.documents.find(d => d.id === id);
+    if (!doc) return null;
+    doc.title = cleanTitle;
+    doc.filename = cleanFilename;
+    doc.file_url = cleanFileUrl;
+    if (file_data !== null) doc.file_data = file_data;
+    doc.category = cleanCategory;
+    doc.file_size = file_size;
+    doc.chunk_count = chunk_count;
+    persistLocalStore();
+    const { file_data: _, ...savedMeta } = doc;
+    return savedMeta;
+  },
+
   async updateChunkCount(id, count) {
     const adapter = getDbAdapter();
     if (adapter === 'postgres') {
@@ -323,6 +357,18 @@ export const DocumentChunkModel = {
     return store.document_chunks
       .filter(c => c.document_id === documentId)
       .sort((a, b) => a.chunk_index - b.chunk_index);
+  },
+
+  async deleteByDocumentId(documentId) {
+    const adapter = getDbAdapter();
+    if (adapter === 'postgres') {
+      const pool = getPgPool();
+      await pool.query('DELETE FROM document_chunks WHERE document_id = $1', [documentId]);
+      return;
+    }
+    const store = getMemoryStore();
+    store.document_chunks = store.document_chunks.filter(c => c.document_id !== documentId);
+    persistLocalStore();
   },
 
   async searchSimilar(queryEmbedding, topK = 4, categoryFilter = null) {
