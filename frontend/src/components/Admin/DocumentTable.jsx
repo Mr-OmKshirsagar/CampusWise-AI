@@ -131,7 +131,7 @@ export default function DocumentTable({
         </div>
 
         {/* Apple WWDC25 Sliding Liquid Glass Category Switcher with Unique Theme Palette */}
-        <div className="overflow-x-auto no-scrollbar py-1">
+        <div className="w-full max-w-full overflow-x-auto no-scrollbar py-1">
           <LiquidSegmentedControl
             options={categoryOptions}
             value={selectedCategory}

@@ -169,19 +169,19 @@ export default function AdminDocumentsPage() {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
+    <div className="min-h-[calc(100dvh-4rem)] px-3 py-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white overflow-x-hidden">
       {/* ══════════════════════════════════════════════════════════════
           1. HEADER & DYNAMIC SITUATIONAL REFRESH BUTTON
          ══════════════════════════════════════════════════════════════ */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/35 shadow-liquid-sm">
+        <div className="space-y-1.5 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/35 shadow-liquid-sm shrink-0">
               Admin Ingestion Engine
             </span>
             <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">• pgvector Knowledge Base</span>
           </div>
-          <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight break-words">
             Institutional Document Ingestion
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
@@ -251,9 +251,9 @@ export default function AdminDocumentsPage() {
           2. APPLE CONTROL CENTER METRIC WIDGETS WITH INCREASING NUMBER ANIMATION
          ══════════════════════════════════════════════════════════════ */}
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5">
           {/* Tile 1: Total Documents */}
-          <div className="relative group glass-panel-elevated p-6 rounded-4xl border border-sky-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+          <div className="relative group glass-panel-elevated p-4 sm:p-6 rounded-3xl sm:rounded-4xl border border-sky-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
             <div className="relative z-10 space-y-3">
               <div className="flex items-center justify-between">
@@ -280,7 +280,7 @@ export default function AdminDocumentsPage() {
           </div>
 
           {/* Tile 2: Indexed Chunks */}
-          <div className="relative group glass-panel-elevated p-6 rounded-4xl border border-purple-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+          <div className="relative group glass-panel-elevated p-4 sm:p-6 rounded-3xl sm:rounded-4xl border border-purple-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
             <div className="relative z-10 space-y-3">
               <div className="flex items-center justify-between">
@@ -307,7 +307,7 @@ export default function AdminDocumentsPage() {
           </div>
 
           {/* Tile 3: Storage Size */}
-          <div className="relative group glass-panel-elevated p-6 rounded-4xl border border-emerald-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+          <div className="relative group glass-panel-elevated p-4 sm:p-6 rounded-3xl sm:rounded-4xl border border-emerald-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
             <div className="relative z-10 space-y-3">
               <div className="flex items-center justify-between">

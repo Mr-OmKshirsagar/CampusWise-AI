@@ -336,7 +336,7 @@ export default function LandingPage() {
         <section className="text-center max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-badge-glow text-sky-700 dark:text-sky-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-liquid-sm dark:shadow-glass-sm animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-sky-500 dark:bg-sky-400 animate-pulse shadow-[0_0_8px_#38bdf8]" />
-            <span>Official College RAG Platform • v1.1</span>
+            <span>Official College RAG Platform • v1.2</span>
           </div>
 
           <h1 className="font-display text-2xl xs:text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-[1.15] sm:leading-[1.12]">

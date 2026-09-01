@@ -159,7 +159,7 @@ export default function ToastContainer() {
   if (toasts.length === 0) return null;
 
   const content = (
-    <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-[200] flex flex-col gap-3 max-w-sm sm:max-w-md w-full pointer-events-none px-3 sm:px-0">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:top-6 sm:right-6 z-[200] flex flex-col items-center sm:items-end gap-2.5 w-[calc(100vw-1.5rem)] max-w-sm sm:max-w-md pointer-events-none">
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} onDismiss={removeToast} />
       ))}

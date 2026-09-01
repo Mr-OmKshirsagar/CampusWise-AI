@@ -267,7 +267,7 @@ export default function AdminAnalyticsPage() {
             </span>
             <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
-              pgvector Engine v1.1
+              pgvector Engine v1.2
             </span>
           </div>
           <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">

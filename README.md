@@ -1,6 +1,6 @@
 # 🎓 CampusWise AI – Enterprise RAG-Based College Information Assistant
 
-[![Version: v1.1.0](https://img.shields.io/badge/Version-v1.1.0-orange.svg)](https://github.com/Mr-OmKshirsagar/CampusWise-AI/releases/tag/v1.1.0)
+[![Version: v1.2.0](https://img.shields.io/badge/Version-v1.2.0-orange.svg)](https://github.com/Mr-OmKshirsagar/CampusWise-AI/releases/tag/v1.2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-v20%2B-green.svg)](https://nodejs.org)
 [![React](https://img.shields.io/badge/React-18.3-61dafb.svg)](https://reactjs.org)
@@ -26,7 +26,12 @@
 
 ---
 
-## 🚀 What's New in v1.1.0
+## 🚀 What's New in v1.2.0
+
+* 🌊 **Liquid Glass UI/UX Design System:** Comprehensive Apple-grade fluid translucent interface with multi-tier blurs, specular highlights, and chromatic rainbow dispersion rims.
+* 📱 **Fixed-Top Navbar & Mobile Floating Drawer:** Pinned navbar with dynamic scroll transparency and animated pop/dismiss mobile overlay.
+* 📄 **Native HTML5 Canvas PDF Viewer:** Powered by `pdfjs-dist` for smooth touch scrolling on mobile and tablet browsers.
+* 🎯 **Full Cross-Device Responsiveness & Centered Toasts:** Fluid responsive layouts across mobile, tablet, and desktop viewports.
 
 * 🌟 **Hardware-Accelerated View Transitions Theme Engine:** Zero-flicker, continuous circular ripple theme switching (Dark "Obsidian Glass" ↔ Light "Pearl Glass") originating from the exact top-center (`50% 0%`) of the screen.
 * 📄 **Fullscreen Document Viewer Modal:** React portal-backed responsive document viewer mounted at `document.body` with fluid maximize/minimize window animations and border-locked scrollbar tracking.
