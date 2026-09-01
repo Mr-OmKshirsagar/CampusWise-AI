@@ -121,12 +121,11 @@ export default function AdminDocumentsPage() {
         (err.response && [502, 503, 504].includes(err.response.status));
 
       if (isNetworkOrDown) {
-        // Condition B: Failed to connect / backend down
         setRefreshStatus('failed');
         useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
+        // Schedule automatic reconnection retry in 6 seconds
         startAutoRetryCountdown(6);
       } else {
-        // Server is online, responded with HTTP status (e.g. 401 Unauthorized)
         setRefreshStatus('idle');
         useServerHealthStore.getState().setServerOnline();
       }
