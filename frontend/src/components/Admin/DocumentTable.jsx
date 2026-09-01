@@ -113,11 +113,11 @@ export default function DocumentTable({
     (doc.file_url || '').match(/\.(png|jpe?g|webp)$/i);
 
   return (
-    <div className="glass-panel-elevated rounded-4xl border border-slate-200/90 dark:border-white/[0.12] overflow-hidden space-y-3 sm:space-y-4 shadow-liquid-md dark:shadow-glass-lg transition-colors duration-300">
+    <div className="glass-panel-elevated rounded-3xl sm:rounded-4xl border border-slate-200/90 dark:border-white/[0.12] overflow-hidden space-y-3 sm:space-y-4 shadow-liquid-md dark:shadow-glass-lg transition-colors duration-300 w-full max-w-full min-w-0">
       {/* Table Top Controls & Search Bar with Sliding Liquid Category Filter */}
-      <div className="p-4 sm:p-6 border-b border-slate-200/80 dark:border-white/[0.08] flex flex-col xl:flex-row gap-4 items-stretch xl:items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
+      <div className="p-3 xs:p-4 sm:p-6 border-b border-slate-200/80 dark:border-white/[0.08] flex flex-col xl:flex-row gap-3 sm:gap-4 items-stretch xl:items-center justify-between bg-slate-50/50 dark:bg-white/[0.02] w-full max-w-full min-w-0">
         <div className="relative w-full xl:w-80 shrink-0">
-          <Search className="w-4 h-4 absolute left-4 top-3.5 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-4 top-3 sm:top-3.5 text-slate-400" />
           <input
             type="text"
             placeholder="Search indexed documents..."
@@ -131,7 +131,7 @@ export default function DocumentTable({
         </div>
 
         {/* Apple WWDC25 Sliding Liquid Glass Category Switcher with Unique Theme Palette */}
-        <div className="overflow-x-auto no-scrollbar py-1">
+        <div className="w-full xl:w-auto overflow-x-auto no-scrollbar py-0.5 sm:py-1 -mx-1 px-1 min-w-0 max-w-full">
           <LiquidSegmentedControl
             options={categoryOptions}
             value={selectedCategory}
@@ -276,7 +276,7 @@ export default function DocumentTable({
       </div>
 
       {/* Mobile Card View (< 768px) with Liquid Row Downward Slide Animations */}
-      <div className="md:hidden px-4 space-y-3">
+      <div className="md:hidden px-3 xs:px-4 space-y-2.5 xs:space-y-3">
         {paginatedDocs.length === 0 ? (
           <div className="text-center py-8 text-slate-400 text-xs">
             No indexed documents found.
@@ -297,16 +297,16 @@ export default function DocumentTable({
                     : newlyAddedId
                     ? 'animate-liquid-slide-down'
                     : 'animate-liquid-row'
-                } glass-card p-4 rounded-3xl space-y-3 border-slate-200/80 dark:border-white/[0.08] shadow-liquid-sm will-change-[transform,opacity]`}
+                } glass-card p-3.5 xs:p-4 rounded-2xl xs:rounded-3xl space-y-2.5 xs:space-y-3 border-slate-200/80 dark:border-white/[0.08] shadow-liquid-sm will-change-[transform,opacity]`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <GlassIcon
                       icon={isImage ? ImageIcon : FileText}
                       variant={isNew ? 'emerald' : isImage ? 'emerald' : 'cyan'}
                       size="xs"
                     />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <p className="font-bold text-xs text-slate-900 dark:text-white truncate">
                           {doc.title || cleanName || 'Untitled Document'}
@@ -332,7 +332,7 @@ export default function DocumentTable({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/60 dark:border-white/[0.06]">
+                <div className="flex items-center justify-between text-[10px] xs:text-[11px] font-mono text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/60 dark:border-white/[0.06]">
                   <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400 font-bold">
                     <Layers className="w-3 h-3" />
                     {doc.chunk_count ?? 0} chunks
@@ -348,7 +348,7 @@ export default function DocumentTable({
                   <button
                     type="button"
                     onClick={() => handleViewAction(doc.id)}
-                    className="flex-1 py-1.5 px-3 rounded-full glass-badge text-xs font-semibold text-sky-600 dark:text-sky-400 flex items-center justify-center gap-1.5 shadow-liquid-sm cursor-pointer"
+                    className="flex-1 py-1.5 px-3 rounded-full glass-badge text-xs font-semibold text-sky-600 dark:text-sky-400 flex items-center justify-center gap-1.5 shadow-liquid-sm cursor-pointer active:scale-95 transition-transform"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Inspect</span>
@@ -357,7 +357,7 @@ export default function DocumentTable({
                   <button
                     type="button"
                     onClick={() => setDocumentToDelete(doc)}
-                    className="p-1.5 rounded-full glass-badge text-rose-500 hover:bg-rose-500/10 shadow-liquid-sm cursor-pointer"
+                    className="p-1.5 rounded-full glass-badge text-rose-500 hover:bg-rose-500/10 shadow-liquid-sm cursor-pointer active:scale-95 transition-transform"
                     title="Delete"
                   >
                     <Trash2 className="w-3.5 h-3.5" />

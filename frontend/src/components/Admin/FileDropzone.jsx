@@ -361,7 +361,7 @@ export default function FileDropzone({ onUploadSuccess, documents = [] }) {
   const targetReplaceDoc = (documents || []).find((d) => d.id === selectedReplaceDocId);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-full min-w-0">
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -383,7 +383,7 @@ export default function FileDropzone({ onUploadSuccess, documents = [] }) {
         onClick={() => {
           if (!file && !isUploading) fileInputRef.current?.click();
         }}
-        className={`relative glass-card p-6 sm:p-10 rounded-4xl text-center transition-all duration-500 cursor-pointer overflow-hidden border-2 select-none ${
+        className={`relative glass-card p-4 xs:p-6 sm:p-10 rounded-3xl sm:rounded-4xl text-center transition-all duration-500 cursor-pointer overflow-hidden border-2 select-none w-full max-w-full min-w-0 ${
           isDragging
             ? 'border-sky-500 bg-sky-500/[0.12] dark:bg-sky-500/[0.18] shadow-[0_0_40px_rgba(56,189,248,0.4)] scale-[1.01]'
             : successResult
@@ -565,12 +565,12 @@ export default function FileDropzone({ onUploadSuccess, documents = [] }) {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 xs:gap-2 pt-2">
               {['PDF Handbook', 'Scanned (PNG/JPG)', 'Hostel Rules', 'Fee Schedule'].map(
                 (badge) => (
                   <span
                     key={badge}
-                    className="px-3 py-1 rounded-full text-[10px] font-semibold glass-badge text-slate-600 dark:text-slate-300 shadow-liquid-sm"
+                    className="px-2.5 py-0.5 xs:px-3 xs:py-1 rounded-full text-[9px] xs:text-[10px] font-semibold glass-badge text-slate-600 dark:text-slate-300 shadow-liquid-sm whitespace-nowrap"
                   >
                     {badge}
                   </span>
@@ -1006,30 +1006,32 @@ export default function FileDropzone({ onUploadSuccess, documents = [] }) {
 
             {/* 6. Dynamic Icon & Label Content with Spring Pop Morphing */}
             {isUploading ? (
-              <div className="relative z-20 flex items-center justify-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>
+              <div className="relative z-20 flex items-center justify-center gap-2 px-3 text-center min-w-0">
+                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+                <span className="truncate text-xs sm:text-sm">
                   {ingestionMode === 'update'
-                    ? 'Updating Document & Re-Vectorizing Passages...'
+                    ? 'Updating Document...'
                     : 'Processing & Vectorizing Document...'}
                 </span>
               </div>
             ) : (
               <div
                 key={ingestionMode}
-                className="relative z-20 flex items-center justify-center gap-2 animate-scale-up"
+                className="relative z-20 flex items-center justify-center gap-1.5 xs:gap-2 px-3 text-center min-w-0 animate-scale-up"
               >
                 {ingestionMode === 'update' ? (
                   <>
-                    <RotateCcw className="w-4 h-4 transition-transform duration-500 group-hover:rotate-180 animate-icon-pop" />
-                    <span>Update & Re-Index Document into RAG Knowledge Base</span>
-                    <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    <RotateCcw className="w-4 h-4 shrink-0 transition-transform duration-500 group-hover:rotate-180 animate-icon-pop" />
+                    <span className="truncate sm:hidden">Update & Re-Index Document</span>
+                    <span className="hidden sm:inline">Update & Re-Index Document into RAG Knowledge Base</span>
+                    <ArrowRight className="w-4 h-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
                   </>
                 ) : (
                   <>
-                    <ScanText className="w-4 h-4 transition-transform duration-300 group-hover:scale-110 animate-icon-pop" />
-                    <span>Ingest & Index Document into RAG Knowledge Base</span>
-                    <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    <ScanText className="w-4 h-4 shrink-0 transition-transform duration-300 group-hover:scale-110 animate-icon-pop" />
+                    <span className="truncate sm:hidden">Ingest & Index Document</span>
+                    <span className="hidden sm:inline">Ingest & Index Document into RAG Knowledge Base</span>
+                    <ArrowRight className="w-4 h-4 shrink-0 transition-transform duration-300 group-hover:translate-x-1" />
                   </>
                 )}
               </div>
