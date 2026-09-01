@@ -1,70 +1,101 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   FileText,
-  Trash2,
   Search,
-  Filter,
-  Layers,
-  HardDrive,
-  Calendar,
   Eye,
-  ChevronLeft,
-  ChevronRight,
+  Trash2,
+  Download,
+  ExternalLink,
+  Layers,
+  Calendar,
   Image as ImageIcon,
-  Loader2,
-  CheckCircle2,
+  CheckCircle,
+  FileCode,
+  AlertCircle,
+  RefreshCw,
+  Sparkles,
 } from 'lucide-react';
-import { documentApi } from '../../services/api.js';
-import GlassIcon from '../Common/GlassIcon.jsx';
 import Pagination from '../Common/Pagination.jsx';
+import GlassIcon from '../Common/GlassIcon.jsx';
+import LiquidSegmentedControl from '../Common/LiquidSegmentedControl.jsx';
+import ConfirmModal from '../Common/ConfirmModal.jsx';
+import { toast } from '../../store/toastStore.js';
 
-export default function DocumentTable({ documents = [], onDocumentDeleted, onSelectDocument }) {
+export default function DocumentTable({
+  documents = [],
+  onDelete,
+  onView,
+  onDocumentDeleted,
+  onSelectDocument,
+  newlyAddedId = null,
+  isLoading = false,
+}) {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [deletingId, setDeletingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const [documentToDelete, setDocumentToDelete] = useState(null);
+  const pageSize = 8;
 
-  const categories = ['All', ...new Set(documents.map((d) => d.category).filter(Boolean))];
+  const handleViewAction = (id) => {
+    if (onView) onView(id);
+    else if (onSelectDocument) onSelectDocument(id);
+  };
 
-  const filteredDocs = useMemo(() => {
-    return documents.filter((doc) => {
-      const matchesSearch =
-        (doc.title || '').toLowerCase().includes(search.toLowerCase()) ||
-        (doc.filename || '').toLowerCase().includes(search.toLowerCase());
-      const matchesCat = selectedCategory === 'All' || doc.category === selectedCategory;
-      return matchesSearch && matchesCat;
-    });
-  }, [documents, search, selectedCategory]);
+  const handleDeleteAction = (id, docName) => {
+    if (onDelete) onDelete(id, docName);
+    else if (onDocumentDeleted) onDocumentDeleted(id, docName);
+  };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, selectedCategory]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredDocs.length / pageSize));
-  const validCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
-
-  const startIndex = (validCurrentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, filteredDocs.length);
-  const paginatedDocs = filteredDocs.slice(startIndex, startIndex + pageSize);
-
-  const handleDelete = async (id, title) => {
-    if (!confirm(`Are you sure you want to delete "${title}"? This will cascade-delete all its vector chunks.`)) {
-      return;
-    }
-
-    setDeletingId(id);
-    try {
-      await documentApi.delete(id);
-      if (onDocumentDeleted) onDocumentDeleted(id);
-    } catch (err) {
-      alert(err.response?.data?.error || err.message || 'Failed to delete document.');
-    } finally {
-      setDeletingId(null);
+  const handleCancelDelete = () => {
+    if (documentToDelete) {
+      const docName = documentToDelete.title || (documentToDelete.filename || '').replace(/^\d+-\d+-/, '');
+      toast.cancel(`Deletion cancelled for "${docName}"`, 'Action Cancelled');
+      setDocumentToDelete(null);
     }
   };
 
-  const getCategoryColor = (category) => {
+  const handleConfirmDelete = async () => {
+    if (documentToDelete) {
+      const doc = documentToDelete;
+      const docName = doc.title || (doc.filename || '').replace(/^\d+-\d+-/, '');
+      setDocumentToDelete(null);
+      try {
+        await handleDeleteAction(doc.id, docName);
+      } catch (err) {
+        toast.error(`Failed to delete "${docName}": ${err.message || 'Error occurred'}`, 'Deletion Failed');
+      }
+    }
+  };
+
+  // 100% Unique colors for every single option without any duplicate shades
+  const categoryOptions = [
+    { id: 'All', label: 'All', color: 'lime' },         // 🍋 Electric Neon Lime (Distinct from all other categories)
+    { id: 'Academics', label: 'Academics', color: 'cyan' }, // 💧 Sky Blue
+    { id: 'General', label: 'General', color: 'slate' },    // ⚙️ Titanium Slate
+    { id: 'Hostel', label: 'Hostel', color: 'amber' },      // 🍯 Warm Gold
+    { id: 'Admissions', label: 'Admissions', color: 'emerald' }, // 🌿 Mint Emerald
+    { id: 'Exams', label: 'Exams', color: 'rose' },         // 🌸 Rose Pink
+    { id: 'Fees', label: 'Fees', color: 'purple' },         // 🔮 Cyber Violet
+  ];
+
+  // Filter documents by search term and selected category
+  const filteredDocs = documents.filter((doc) => {
+    const cleanName = (doc.filename || '').replace(/^\d+-\d+-/, '');
+    const matchesSearch =
+      (doc.title || '').toLowerCase().includes(search.toLowerCase()) ||
+      cleanName.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory =
+      selectedCategory === 'All' || doc.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const totalPages = Math.ceil(filteredDocs.length / pageSize) || 1;
+  const paginatedDocs = filteredDocs.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const getCategoryBadgeClass = (category) => {
     const map = {
       Admissions: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
       Academics: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30',
@@ -82,52 +113,50 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
     (doc.file_url || '').match(/\.(png|jpe?g|webp)$/i);
 
   return (
-    <div className="glass-panel-elevated rounded-3xl border border-slate-200 dark:border-white/[0.12] overflow-hidden space-y-3 sm:space-y-4 shadow-sm dark:shadow-glass-lg transition-colors duration-300">
-      {/* Table Top Controls & Search Bar (CSS Flexbox) */}
-      <div className="p-3.5 sm:p-5 border-b border-slate-200/80 dark:border-white/[0.08] flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
-        <div className="relative w-full md:w-80 shrink-0">
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+    <div className="glass-panel-elevated rounded-4xl border border-slate-200/90 dark:border-white/[0.12] overflow-hidden space-y-3 sm:space-y-4 shadow-liquid-md dark:shadow-glass-lg transition-colors duration-300">
+      {/* Table Top Controls & Search Bar with Sliding Liquid Category Filter */}
+      <div className="p-4 sm:p-6 border-b border-slate-200/80 dark:border-white/[0.08] flex flex-col xl:flex-row gap-4 items-stretch xl:items-center justify-between bg-slate-50/50 dark:bg-white/[0.02]">
+        <div className="relative w-full xl:w-80 shrink-0">
+          <Search className="w-4 h-4 absolute left-4 top-3.5 text-slate-400" />
           <input
             type="text"
             placeholder="Search indexed documents..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full glass-input rounded-xl pl-10 pr-3.5 py-2 sm:py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all"
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full glass-input rounded-3xl pl-11 pr-4 py-2.5 sm:py-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all"
           />
         </div>
 
-        {/* Category Pills (CSS Flexbox Wrapping without any scrollbars) */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs select-none">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all shrink-0 active:scale-95 ${
-                selectedCategory === cat
-                  ? 'bg-sky-500/15 dark:bg-sky-500/20 text-sky-700 dark:text-sky-200 border border-sky-500/35 dark:border-sky-500/40 shadow-sm dark:shadow-glow-cyan scale-105'
-                  : 'glass-badge text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.08]'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+        {/* Apple WWDC25 Sliding Liquid Glass Category Switcher with Unique Theme Palette */}
+        <div className="overflow-x-auto no-scrollbar py-1">
+          <LiquidSegmentedControl
+            options={categoryOptions}
+            value={selectedCategory}
+            onChange={(cat) => {
+              setSelectedCategory(cat);
+              setCurrentPage(1);
+            }}
+          />
         </div>
       </div>
 
-      {/* Desktop Table View (>= 768px - CSS Grid / Table) */}
-      <div className="hidden md:block">
+      {/* Desktop Table View (>= 768px) with Liquid Row Stagger & Downward Slide Animations */}
+      <div className="hidden md:block px-3">
         <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-          <thead className="bg-slate-100/80 dark:bg-[#030508]/80 text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold border-b border-slate-200 dark:border-white/[0.08] text-[10px]">
+          <thead className="bg-slate-100/70 dark:bg-white/[0.03] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold text-[10px] rounded-3xl">
             <tr>
-              <th className="px-6 py-4">Document Title</th>
+              <th className="px-6 py-4 rounded-l-2xl">Document Title</th>
               <th className="px-4 py-4">Category</th>
               <th className="px-4 py-4">Vector Chunks</th>
               <th className="px-4 py-4">Size</th>
               <th className="px-4 py-4">Uploaded</th>
-              <th className="px-6 py-4 text-right">Actions</th>
+              <th className="px-6 py-4 text-right rounded-r-2xl">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200/80 dark:divide-white/[0.06]">
+          <tbody className="divide-y divide-slate-200/60 dark:divide-white/[0.04]">
             {paginatedDocs.length === 0 ? (
               <tr>
                 <td colSpan={6} className="text-center py-12 text-slate-400 text-xs">
@@ -135,37 +164,58 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
                 </td>
               </tr>
             ) : (
-              paginatedDocs.map((doc) => {
+              paginatedDocs.map((doc, index) => {
                 const isImage = isImageFile(doc);
+                const cleanName = (doc.filename || '').replace(/^\d+-\d+-/, '');
+                const isNew = doc.id === newlyAddedId;
+
                 return (
                   <tr
-                    key={doc.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-white/[0.03] transition-colors group"
+                    key={`${currentPage}-${doc.id}`}
+                    style={{ animationDelay: isNew ? '0ms' : `${(index + 1) * 40}ms` }}
+                    className={`${
+                      isNew
+                        ? 'animate-liquid-new-row bg-emerald-500/[0.09] dark:bg-emerald-500/[0.14] ring-1 ring-emerald-500/50 shadow-[0_0_30px_-5px_rgba(16,185,129,0.3)]'
+                        : newlyAddedId
+                        ? 'animate-liquid-slide-down hover:bg-sky-500/[0.05] dark:hover:bg-white/[0.05]'
+                        : 'animate-liquid-row hover:bg-sky-500/[0.05] dark:hover:bg-white/[0.05]'
+                    } transition-all duration-300 group will-change-[transform,opacity]`}
                   >
+                    {/* Document Title & File Name */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <GlassIcon
-                          icon={isImage ? ImageIcon : FileText}
-                          variant={isImage ? 'emerald' : 'cyan'}
-                          size="xs"
-                        />
-                        <div className="min-w-0">
-                          <button
-                            onClick={() => onSelectDocument && onSelectDocument(doc.id)}
-                            className="font-bold text-slate-900 dark:text-white hover:text-sky-600 dark:hover:text-sky-300 transition-colors truncate block max-w-xs text-left"
-                          >
-                            {doc.title}
-                          </button>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                            {doc.filename}
-                          </span>
+                        <div className="relative">
+                          <GlassIcon
+                            icon={isImage ? ImageIcon : FileText}
+                            variant={isNew ? 'emerald' : isImage ? 'emerald' : 'cyan'}
+                            size="xs"
+                          />
+                          {isNew && (
+                            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                          )}
+                        </div>
+                        <div className="min-w-0 max-w-[200px] lg:max-w-xs">
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-bold text-slate-900 dark:text-white truncate">
+                              {doc.title || cleanName || 'Untitled Document'}
+                            </p>
+                            {isNew && (
+                              <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 text-[9px] font-extrabold uppercase tracking-wider font-mono shrink-0">
+                                NEW
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-400 truncate font-mono">
+                            {cleanName}
+                          </p>
                         </div>
                       </div>
                     </td>
 
+                    {/* Category */}
                     <td className="px-4 py-4">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getCategoryColor(
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm ${getCategoryBadgeClass(
                           doc.category
                         )}`}
                       >
@@ -173,41 +223,47 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
                       </span>
                     </td>
 
+                    {/* Vector Chunks */}
                     <td className="px-4 py-4">
-                      <div className="flex items-center gap-1.5 font-mono text-sky-600 dark:text-sky-400 font-bold">
+                      <div className="flex items-center gap-1.5 font-mono text-xs text-sky-600 dark:text-sky-400 font-bold">
                         <Layers className="w-3.5 h-3.5" />
-                        <span>{doc.chunk_count || 0} chunks</span>
+                        <span>{doc.chunk_count ?? 0} chunks</span>
                       </div>
                     </td>
 
+                    {/* File Size */}
                     <td className="px-4 py-4 font-mono text-slate-500 dark:text-slate-400">
-                      {doc.file_size ? `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB` : 'N/A'}
+                      {doc.file_size
+                        ? `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`
+                        : 'N/A'}
                     </td>
 
-                    <td className="px-4 py-4 text-slate-500 dark:text-slate-400">
-                      {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : 'Recent'}
+                    {/* Upload Date */}
+                    <td className="px-4 py-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                      {doc.created_at
+                        ? new Date(doc.created_at).toLocaleDateString()
+                        : 'N/A'}
                     </td>
 
+                    {/* Actions */}
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
-                          onClick={() => onSelectDocument && onSelectDocument(doc.id)}
-                          className="p-1.5 rounded-xl glass-badge text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:border-sky-500/40 transition-all"
-                          title="Preview Document & Chunks"
+                          type="button"
+                          onClick={() => handleViewAction(doc.id)}
+                          className="p-2 rounded-full glass-badge text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 hover:bg-sky-500/10 active:scale-95 transition-all shadow-liquid-sm cursor-pointer"
+                          title="Inspect Document & Vector Chunks"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
                         </button>
+
                         <button
-                          onClick={() => handleDelete(doc.id, doc.title)}
-                          disabled={deletingId === doc.id}
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors disabled:opacity-50"
-                          title="Delete Document"
+                          type="button"
+                          onClick={() => setDocumentToDelete(doc)}
+                          className="p-2 rounded-full glass-badge text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 active:scale-95 transition-all shadow-liquid-sm cursor-pointer"
+                          title="Delete from Vector Store"
                         >
-                          {deletingId === doc.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-rose-500" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -219,36 +275,56 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
         </table>
       </div>
 
-      {/* Mobile Responsive Cards (< 768px - CSS Grid / Flexbox) */}
-      <div className="md:hidden p-3 grid grid-cols-1 gap-2.5">
+      {/* Mobile Card View (< 768px) with Liquid Row Downward Slide Animations */}
+      <div className="md:hidden px-4 space-y-3">
         {paginatedDocs.length === 0 ? (
           <div className="text-center py-8 text-slate-400 text-xs">
             No indexed documents found.
           </div>
         ) : (
-          paginatedDocs.map((doc) => {
+          paginatedDocs.map((doc, index) => {
             const isImage = isImageFile(doc);
+            const cleanName = (doc.filename || '').replace(/^\d+-\d+-/, '');
+            const isNew = doc.id === newlyAddedId;
+
             return (
               <div
-                key={doc.id}
-                className="glass-card p-3.5 rounded-2xl flex flex-col gap-2.5 border-slate-200 dark:border-white/[0.08]"
+                key={`${currentPage}-${doc.id}`}
+                style={{ animationDelay: isNew ? '0ms' : `${(index + 1) * 40}ms` }}
+                className={`${
+                  isNew
+                    ? 'animate-liquid-new-row ring-1 ring-emerald-500/50 bg-emerald-500/[0.09] dark:bg-emerald-500/[0.14] shadow-[0_0_30px_-5px_rgba(16,185,129,0.3)]'
+                    : newlyAddedId
+                    ? 'animate-liquid-slide-down'
+                    : 'animate-liquid-row'
+                } glass-card p-4 rounded-3xl space-y-3 border-slate-200/80 dark:border-white/[0.08] shadow-liquid-sm will-change-[transform,opacity]`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <GlassIcon
                       icon={isImage ? ImageIcon : FileText}
-                      variant={isImage ? 'emerald' : 'cyan'}
+                      variant={isNew ? 'emerald' : isImage ? 'emerald' : 'cyan'}
                       size="xs"
-                      className="shrink-0"
                     />
                     <div className="min-w-0">
-                      <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{doc.title}</h4>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{doc.filename}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-bold text-xs text-slate-900 dark:text-white truncate">
+                          {doc.title || cleanName || 'Untitled Document'}
+                        </p>
+                        {isNew && (
+                          <span className="px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 text-[9px] font-extrabold uppercase tracking-wider font-mono shrink-0">
+                            NEW
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-400 truncate font-mono">
+                        {cleanName}
+                      </p>
                     </div>
                   </div>
 
                   <span
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border shrink-0 ${getCategoryColor(
+                    className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border shrink-0 ${getCategoryBadgeClass(
                       doc.category
                     )}`}
                   >
@@ -256,32 +332,35 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/80 dark:border-white/[0.06]">
-                  <span className="font-mono text-sky-600 dark:text-sky-400 font-bold">
-                    {doc.chunk_count || 0} chunks
+                <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200/60 dark:border-white/[0.06]">
+                  <span className="flex items-center gap-1 text-sky-600 dark:text-sky-400 font-bold">
+                    <Layers className="w-3 h-3" />
+                    {doc.chunk_count ?? 0} chunks
                   </span>
-                  <span>{doc.created_at ? new Date(doc.created_at).toLocaleDateString() : ''}</span>
+                  <span>
+                    {doc.file_size
+                      ? `${(doc.file_size / (1024 * 1024)).toFixed(2)} MB`
+                      : 'N/A'}
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2 pt-0.5">
+                <div className="flex items-center justify-end gap-2 pt-1">
                   <button
-                    onClick={() => onSelectDocument && onSelectDocument(doc.id)}
-                    className="flex-1 py-2 rounded-xl glass-badge text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white flex items-center justify-center gap-1.5 active:scale-98"
+                    type="button"
+                    onClick={() => handleViewAction(doc.id)}
+                    className="flex-1 py-1.5 px-3 rounded-full glass-badge text-xs font-semibold text-sky-600 dark:text-sky-400 flex items-center justify-center gap-1.5 shadow-liquid-sm cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    <span>Preview & Chunks</span>
+                    <span>Inspect</span>
                   </button>
 
                   <button
-                    onClick={() => handleDelete(doc.id, doc.title)}
-                    disabled={deletingId === doc.id}
-                    className="p-2 rounded-xl text-rose-500 hover:bg-rose-500/10 transition-colors shrink-0"
+                    type="button"
+                    onClick={() => setDocumentToDelete(doc)}
+                    className="p-1.5 rounded-full glass-badge text-rose-500 hover:bg-rose-500/10 shadow-liquid-sm cursor-pointer"
+                    title="Delete"
                   >
-                    {deletingId === doc.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
@@ -290,16 +369,28 @@ export default function DocumentTable({ documents = [], onDocumentDeleted, onSel
         )}
       </div>
 
-      {/* Pagination Footer */}
-      {filteredDocs.length > 0 && (
+      {/* Pagination Footer with Sliding Liquid Control */}
+      <div className="p-4 sm:px-6 border-t border-slate-200/80 dark:border-white/[0.08] bg-slate-50/30 dark:bg-white/[0.01]">
         <Pagination
-          currentPage={validCurrentPage}
+          currentPage={currentPage}
           totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
+          onPageChange={setCurrentPage}
           totalItems={filteredDocs.length}
           pageSize={pageSize}
         />
-      )}
+      </div>
+
+      {/* Liquid Glass Confirmation Popup for Document Deletion */}
+      <ConfirmModal
+        isOpen={!!documentToDelete}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Institutional Document"
+        itemName={documentToDelete?.title || (documentToDelete?.filename || '').replace(/^\d+-\d+-/, '')}
+        itemType="document"
+        description="Are you sure you want to permanently delete this document? This action will remove the raw file, extracted passages, and 768-dim vector embeddings from pgvector storage."
+        confirmText="Delete Document"
+      />
     </div>
   );
 }
