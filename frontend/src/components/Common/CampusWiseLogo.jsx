@@ -1,7 +1,12 @@
 import React from 'react';
 import { useServerHealthStore } from '../../store/serverHealthStore.js';
 
-export default function CampusWiseLogo({ size = 'md', showText = true, badgeText = 'RAG v1.2' }) {
+export default function CampusWiseLogo({
+  size = 'md',
+  showText = true,
+  badgeText = 'RAG v1.2',
+  showStatusDot = false,
+}) {
   const { status } = useServerHealthStore();
 
   const sizeMap = {
@@ -74,11 +79,13 @@ export default function CampusWiseLogo({ size = 'md', showText = true, badgeText
           </svg>
         </div>
 
-        {/* Live Operational Status Orb (Dynamic Red/Yellow/Green based on backend status) */}
-        <span
-          title={statusConfig.title}
-          className={`absolute -top-0.5 -right-0.5 ${currentSize.dot} rounded-full border-2 transition-colors duration-500 animate-pulse cursor-help ${statusConfig.dotClass}`}
-        />
+        {/* Live Operational Status Orb (Only shown when explicitly requested) */}
+        {showStatusDot && (
+          <span
+            title={statusConfig.title}
+            className={`absolute -top-0.5 -right-0.5 ${currentSize.dot} rounded-full border-2 transition-colors duration-500 animate-pulse cursor-help ${statusConfig.dotClass}`}
+          />
+        )}
       </div>
 
       {showText && (
