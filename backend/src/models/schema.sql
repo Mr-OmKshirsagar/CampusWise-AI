@@ -3,8 +3,8 @@
 -- =========================================================================
 
 -- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "vector";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
+CREATE EXTENSION IF NOT EXISTS "vector" WITH SCHEMA extensions;
 
 -- 1. Users Table
 CREATE TABLE IF NOT EXISTS users (
@@ -95,6 +95,7 @@ CREATE OR REPLACE FUNCTION match_documents (
   similarity float
 )
 LANGUAGE plpgsql
+SET search_path = public, extensions
 AS $$
 BEGIN
   RETURN QUERY
@@ -113,3 +114,13 @@ BEGIN
   LIMIT match_count;
 END;
 $$;
+
+-- =========================================================================
+-- Security: Enable Row Level Security (RLS)
+-- Protects Supabase public REST API from unauthorized access
+-- =========================================================================
+ALTER TABLE IF EXISTS users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS document_chunks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS messages ENABLE ROW LEVEL SECURITY;
