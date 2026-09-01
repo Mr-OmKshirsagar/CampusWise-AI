@@ -1,121 +1,162 @@
-import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-/**
- * Helper to generate page numbers with ellipsis (...)
- * e.g., [1, 2, 3, 4, 5, '...', 10] or [1, '...', 4, 5, 6, '...', 10]
- */
-export function generatePagination(currentPage, totalPages) {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  if (currentPage <= 4) {
-    return [1, 2, 3, 4, 5, '...', totalPages];
-  }
-
-  if (currentPage >= totalPages - 3) {
-    return [
-      1,
-      '...',
-      totalPages - 4,
-      totalPages - 3,
-      totalPages - 2,
-      totalPages - 1,
-      totalPages,
-    ];
-  }
-
-  return [
-    1,
-    '...',
-    currentPage - 1,
-    currentPage,
-    currentPage + 1,
-    '...',
-    totalPages,
-  ];
-}
+import React, { useRef, useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 export default function Pagination({
-  currentPage = 1,
-  totalPages = 1,
+  currentPage,
+  totalPages,
   onPageChange,
-  totalItems = 0,
+  totalItems,
   pageSize = 10,
-  showSummary = true,
-  className = '',
 }) {
-  const validCurrentPage = Math.min(Math.max(currentPage, 1), Math.max(totalPages, 1));
-  const pages = generatePagination(validCurrentPage, totalPages);
+  const pageContainerRef = useRef(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
+  const [isStretching, setIsStretching] = useState(false);
+  const prevPageRef = useRef(currentPage);
 
-  const startIndex = totalItems === 0 ? 0 : (validCurrentPage - 1) * pageSize + 1;
-  const endIndex = Math.min(validCurrentPage * pageSize, totalItems);
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
 
-  const handlePageClick = (page) => {
-    if (page === '...' || page === validCurrentPage || page < 1 || page > totalPages) {
-      return;
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, currentPage - 2);
+      let end = Math.min(totalPages, currentPage + 2);
+
+      if (currentPage <= 3) {
+        start = 1;
+        end = maxVisiblePages;
+      } else if (currentPage >= totalPages - 2) {
+        start = totalPages - maxVisiblePages + 1;
+        end = totalPages;
+      }
+
+      if (start > 1) {
+        pages.push(1);
+        if (start > 2) pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < totalPages) {
+        if (end < totalPages - 1) pages.push('...');
+        pages.push(totalPages);
+      }
     }
-    onPageChange(page);
+
+    return pages;
   };
 
-  return (
-    <div
-      className={`p-3.5 sm:p-5 border-t border-slate-200/80 dark:border-white/[0.08] flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between bg-slate-50/50 dark:bg-white/[0.02] ${className}`}
-    >
-      {/* Showing X to Y of Z records summary */}
-      {showSummary && (
-        <div className="text-xs text-slate-500 dark:text-slate-400 select-none order-2 md:order-1">
-          Showing <span className="font-bold text-slate-900 dark:text-white">{startIndex}</span> to{' '}
-          <span className="font-bold text-slate-900 dark:text-white">{endIndex}</span> of{' '}
-          <span className="font-bold text-slate-900 dark:text-white">{totalItems}</span> documents
-        </div>
-      )}
+  // Track and animate sliding liquid droplet behind active page using offsetLeft/offsetWidth
+  useEffect(() => {
+    if (!pageContainerRef.current) return;
 
-      {/* Pagination Controls - Filter Pill Match */}
-      <nav
-        aria-label="Pagination Navigation"
-        className="flex flex-wrap items-center gap-1.5 text-xs select-none order-1 md:order-2 justify-center md:justify-end"
-      >
-        {/* Previous Button */}
+    const container = pageContainerRef.current;
+    const activeButton = container.querySelector(`[data-page="${currentPage}"]`);
+
+    if (activeButton) {
+      const left = activeButton.offsetLeft;
+      const width = activeButton.offsetWidth;
+
+      setIndicatorStyle({
+        left,
+        width,
+        opacity: 1,
+      });
+
+      if (prevPageRef.current !== currentPage) {
+        setIsStretching(true);
+        const timer = setTimeout(() => setIsStretching(false), 450);
+        prevPageRef.current = currentPage;
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [currentPage, totalPages]);
+
+  if (totalPages <= 1) return null;
+
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalItems);
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs select-none">
+      {/* Items Count Summary */}
+      <div className="text-slate-500 dark:text-slate-400 font-mono text-[11px] order-2 sm:order-1">
+        Showing <span className="font-bold text-slate-800 dark:text-slate-200">{startItem}</span> to{' '}
+        <span className="font-bold text-slate-800 dark:text-slate-200">{endItem}</span> of{' '}
+        <span className="font-bold text-slate-800 dark:text-slate-200">{totalItems}</span> documents
+      </div>
+
+      {/* Pagination Controls with Sliding Liquid Glass Indicator */}
+      <div className="flex items-center gap-1.5 order-1 sm:order-2">
+        {/* First Page */}
         <button
-          type="button"
-          onClick={() => handlePageClick(validCurrentPage - 1)}
-          disabled={validCurrentPage <= 1}
-          aria-label="Previous Page"
-          className="px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all shrink-0 active:scale-95 glass-badge text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:scale-100 flex items-center gap-1"
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          className="p-2 rounded-full text-xs transition-all shrink-0 active:scale-95 glass-badge text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-sky-500/10 dark:hover:bg-white/[0.08] hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent shadow-liquid-sm cursor-pointer"
+          title="First Page"
         >
-          <ChevronLeft className="w-3.5 h-3.5" />
-          <span>Previous</span>
+          <ChevronsLeft className="w-3.5 h-3.5" />
         </button>
 
-        {/* Page Number Pills */}
-        <div className="flex items-center gap-1.5">
-          {pages.map((page, idx) => {
+        {/* Previous Page */}
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 active:scale-95 glass-badge text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-sky-500/10 dark:hover:bg-white/[0.08] hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent flex items-center gap-1 shadow-liquid-sm cursor-pointer"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+          <span className="hidden xs:inline">Prev</span>
+        </button>
+
+        {/* Sliding Liquid Glass Page Numbers Container */}
+        <div
+          ref={pageContainerRef}
+          className="relative flex items-center p-1 rounded-full glass-panel-elevated border border-slate-200/90 dark:border-white/[0.12] shadow-liquid-sm overflow-hidden"
+        >
+          {/* Viscous Sliding Liquid Droplet Indicator with 600ms Fluid Momentum Curve */}
+          <div
+            style={{
+              transform: `translateX(${indicatorStyle.left}px) scaleX(${isStretching ? 1.08 : 1}) scaleY(${isStretching ? 0.92 : 1})`,
+              width: `${indicatorStyle.width}px`,
+              opacity: indicatorStyle.opacity,
+              transformOrigin: 'center center',
+            }}
+            className="absolute top-1 bottom-1 left-0 rounded-full border border-sky-500/60 dark:border-sky-400/70 bg-gradient-to-b from-sky-500/25 via-sky-500/15 to-indigo-500/25 dark:from-sky-400/30 dark:via-sky-400/20 dark:to-indigo-500/30 backdrop-blur-xl pointer-events-none transition-all duration-600 ease-[cubic-bezier(0.22,1,0.36,1)] shadow-[0_0_18px_rgba(14,165,233,0.35),inset_0_1px_1px_0_rgba(255,255,255,0.7),inset_0_-1px_1.5px_0_rgba(56,189,248,0.5)]"
+          >
+            {/* Top-down Specular Reflection Sheen */}
+            <div className="absolute inset-x-1.5 top-0.5 h-1/2 bg-gradient-to-b from-white/60 to-transparent dark:from-white/30 rounded-full pointer-events-none" />
+
+            {/* Bottom Chromatic Dispersion Rainbow Refraction Line */}
+            <div className="absolute inset-x-2 bottom-0 h-[1.5px] bg-gradient-to-r from-pink-400/70 via-cyan-400/80 to-emerald-400/70 blur-[0.5px] rounded-full pointer-events-none opacity-80" />
+          </div>
+
+          {getPageNumbers().map((page, index) => {
             if (page === '...') {
               return (
                 <span
-                  key={`ellipsis-${idx}`}
-                  className="px-2 py-1 text-slate-400 dark:text-slate-500 font-mono select-none tracking-widest text-[11px] sm:text-xs"
+                  key={`ellipsis-${index}`}
+                  className="px-2.5 py-1 text-slate-400 font-mono text-xs"
                 >
                   ...
                 </span>
               );
             }
 
-            const isActive = page === validCurrentPage;
-
+            const isActive = currentPage === page;
             return (
               <button
                 key={`page-${page}`}
-                type="button"
-                onClick={() => handlePageClick(page)}
-                aria-current={isActive ? 'page' : undefined}
-                aria-label={`Page ${page}`}
-                className={`px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all shrink-0 active:scale-95 ${
+                data-page={page}
+                onClick={() => onPageChange(page)}
+                className={`relative z-10 min-w-[32px] h-7 px-2.5 rounded-full text-xs font-semibold transition-colors duration-300 shrink-0 active:scale-95 cursor-pointer ${
                   isActive
-                    ? 'bg-sky-500/15 dark:bg-sky-500/20 text-sky-700 dark:text-sky-200 border border-sky-500/35 dark:border-sky-500/40 shadow-sm dark:shadow-glow-cyan scale-105'
-                    : 'glass-badge text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.08]'
+                    ? 'text-sky-700 dark:text-sky-200 font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {page}
@@ -124,18 +165,26 @@ export default function Pagination({
           })}
         </div>
 
-        {/* Next Button */}
+        {/* Next Page */}
         <button
-          type="button"
-          onClick={() => handlePageClick(validCurrentPage + 1)}
-          disabled={validCurrentPage >= totalPages}
-          aria-label="Next Page"
-          className="px-3 py-1 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition-all shrink-0 active:scale-95 glass-badge text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/[0.08] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:scale-100 flex items-center gap-1"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 active:scale-95 glass-badge text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-sky-500/10 dark:hover:bg-white/[0.08] hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent flex items-center gap-1 shadow-liquid-sm cursor-pointer"
         >
-          <span>Next</span>
+          <span className="hidden xs:inline">Next</span>
           <ChevronRight className="w-3.5 h-3.5" />
         </button>
-      </nav>
+
+        {/* Last Page */}
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="p-2 rounded-full text-xs transition-all shrink-0 active:scale-95 glass-badge text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-sky-500/10 dark:hover:bg-white/[0.08] hover:border-sky-500/30 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent shadow-liquid-sm cursor-pointer"
+          title="Last Page"
+        >
+          <ChevronsRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 }

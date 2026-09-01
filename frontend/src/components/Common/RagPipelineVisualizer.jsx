@@ -30,7 +30,6 @@ export default function RagPipelineVisualizer() {
       iconGlow: 'bg-sky-500/20',
       desc: 'Administrators upload official PDFs, fee circulars, and hostel guidelines. Scanned images are processed via Dual-Layer Vision OCR.',
       metric: 'Max 15MB Multi-page Support',
-      metricIconColor: 'text-sky-600 dark:text-sky-400',
     },
     {
       id: 'chunk',
@@ -47,7 +46,6 @@ export default function RagPipelineVisualizer() {
       iconGlow: 'bg-purple-500/20',
       desc: 'Documents are partitioned into 800-character semantically coherent passages with 100-char overlap, preserving page tags and metadata.',
       metric: '800-char window • 100 overlap',
-      metricIconColor: 'text-purple-600 dark:text-purple-400',
     },
     {
       id: 'embed',
@@ -64,7 +62,6 @@ export default function RagPipelineVisualizer() {
       iconGlow: 'bg-emerald-500/20',
       desc: 'Each text chunk is mapped into high-dimensional embedding space using Google Gemini text-embedding-004 and stored in PostgreSQL pgvector.',
       metric: '768 Float32 Vector Dimension',
-      metricIconColor: 'text-emerald-600 dark:text-emerald-400',
     },
     {
       id: 'rag',
@@ -81,36 +78,35 @@ export default function RagPipelineVisualizer() {
       iconGlow: 'bg-amber-500/20',
       desc: 'Student queries are matched using cosine distance (<=>). Top-4 verified passages are injected into Gemini Flash to generate grounded answers.',
       metric: 'Cosine Threshold >= 0.25',
-      metricIconColor: 'text-amber-600 dark:text-amber-400',
     },
   ];
 
   const currentStep = steps[activeStep];
 
   return (
-    <div className="w-full space-y-6">
-      {/* Step Tabs Grid (Red Marked Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <div className="w-full space-y-5">
+      {/* Step Tabs Grid with Apple Liquid Glass Segmented Design */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         {steps.map((step, idx) => {
           const isActive = activeStep === idx;
           return (
             <button
               key={step.id}
               onClick={() => setActiveStep(idx)}
-              className={`text-left p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 relative overflow-hidden group active:scale-95 cursor-pointer ${
+              className={`text-left p-5 sm:p-6 rounded-4xl border transition-all duration-300 relative overflow-hidden group active:scale-95 cursor-pointer ${
                 isActive
-                  ? `glass-panel-elevated ${step.borderColor} shadow-md dark:shadow-glow-cyan scale-[1.02]`
-                  : 'glass-card border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.18]'
+                  ? `glass-panel-elevated ${step.borderColor} shadow-liquid-md dark:shadow-glow-cyan scale-[1.02]`
+                  : 'glass-card border-slate-200/80 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/[0.18]'
               }`}
             >
               {/* Active Ambient Glow */}
               {isActive && (
                 <div
-                  className={`absolute -top-10 -right-10 w-24 h-24 ${step.iconGlow} rounded-full blur-xl pointer-events-none transition-all duration-500 animate-stage-glow`}
+                  className={`absolute -top-10 -right-10 w-28 h-28 ${step.iconGlow} rounded-full blur-xl pointer-events-none transition-all duration-500 animate-stage-glow`}
                 />
               )}
 
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-3.5">
                 <span
                   className={`text-xs font-mono font-black transition-colors duration-300 ${
                     isActive
@@ -120,7 +116,7 @@ export default function RagPipelineVisualizer() {
                 >
                   PHASE {step.stepNum}
                 </span>
-                <GlassIcon icon={step.icon} variant={step.variant} size="sm" />
+                <GlassIcon icon={step.icon} variant={step.variant} size="xs" />
               </div>
 
               <h4 className="font-display font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug mb-1 transition-colors duration-300">
@@ -130,7 +126,7 @@ export default function RagPipelineVisualizer() {
 
               {/* Bottom Active Progress Line */}
               <div
-                className={`mt-3 h-1 rounded-full transition-all duration-500 ease-out ${
+                className={`mt-4 h-1.5 rounded-full transition-all duration-500 ease-out ${
                   isActive
                     ? `bg-gradient-to-r ${step.activeProgressGradient} w-full shadow-sm`
                     : 'bg-slate-200 dark:bg-white/[0.06] w-8 group-hover:w-16'
@@ -141,9 +137,9 @@ export default function RagPipelineVisualizer() {
         })}
       </div>
 
-      {/* Detailed Active Step Showcase (Yellow Marked Box with Rich Animated Transitions) */}
+      {/* Detailed Active Step Showcase with Squircle Curvature */}
       <div
-        className={`glass-panel-elevated p-5 sm:p-7 rounded-3xl border ${currentStep.borderColor} relative overflow-hidden shadow-sm dark:shadow-glass-lg transition-all duration-500`}
+        className={`glass-panel-elevated p-6 sm:p-8 rounded-4xl border ${currentStep.borderColor} relative overflow-hidden shadow-liquid-md dark:shadow-glass-lg transition-all duration-500`}
       >
         {/* Dynamic ambient background mesh gradient */}
         <div
@@ -152,10 +148,10 @@ export default function RagPipelineVisualizer() {
 
         {/* Ambient Corner Glow Bubble */}
         <div
-          className={`absolute -top-16 -left-16 w-40 h-40 ${currentStep.iconGlow} rounded-full blur-3xl pointer-events-none animate-stage-glow transition-all duration-700`}
+          className={`absolute -top-16 -left-16 w-48 h-48 ${currentStep.iconGlow} rounded-full blur-3xl pointer-events-none animate-stage-glow transition-all duration-700`}
         />
 
-        {/* Re-animated content container on step change via key={activeStep} */}
+        {/* Re-animated content container on step change */}
         <div
           key={activeStep}
           className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 animate-stage-reveal"
@@ -163,7 +159,7 @@ export default function RagPipelineVisualizer() {
           <div className="space-y-3 max-w-2xl">
             <div className="flex items-center gap-2.5">
               <span
-                className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm transition-all duration-300 ${currentStep.badgeColor}`}
+                className={`px-3.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm transition-all duration-300 ${currentStep.badgeColor}`}
               >
                 Active Architecture Stage
               </span>
@@ -172,7 +168,7 @@ export default function RagPipelineVisualizer() {
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3.5">
               <div className="hidden sm:block shrink-0">
                 <GlassIcon icon={currentStep.icon} variant={currentStep.variant} size="md" />
               </div>
@@ -191,8 +187,8 @@ export default function RagPipelineVisualizer() {
             </p>
           </div>
 
-          {/* Metric Highlight Box with Pop Animation */}
-          <div className="w-full md:w-auto p-4 sm:p-5 rounded-2xl glass-input border-slate-200 dark:border-white/[0.1] shrink-0 text-center sm:text-left space-y-1.5 shadow-sm transition-all duration-300 animate-metric-pop hover:scale-[1.02]">
+          {/* Metric Highlight Box */}
+          <div className="w-full md:w-auto p-4 sm:p-5 rounded-3xl glass-input border-slate-200/90 dark:border-white/[0.1] shrink-0 text-center sm:text-left space-y-1.5 shadow-sm transition-all duration-300 animate-metric-pop hover:scale-[1.02]">
             <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider block">
               Technical Specification
             </span>
