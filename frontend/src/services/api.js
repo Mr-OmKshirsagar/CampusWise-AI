@@ -51,10 +51,11 @@ api.interceptors.response.use(
     useServerHealthStore.getState().setServerOnline();
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalConfig = error.config;
     const isSilent = Boolean(
-      error.config?.silent ||
-      error.config?.headers?.['x-silent-request'] === 'true'
+      originalConfig?.silent ||
+      originalConfig?.headers?.['x-silent-request'] === 'true'
     );
 
     const isNetworkOrDown =
@@ -62,6 +63,27 @@ api.interceptors.response.use(
       error.code === 'ERR_NETWORK' ||
       error.code === 'ECONNABORTED' ||
       (error.response && [502, 503, 504].includes(error.response.status));
+
+    // Transparent Auto-Retry for cold starts / wake-up delays on idempotent requests
+    if (
+      isNetworkOrDown &&
+      originalConfig &&
+      !originalConfig.noRetry &&
+      (originalConfig._retryCount || 0) < 2 &&
+      (!originalConfig.method || originalConfig.method.toLowerCase() === 'get')
+    ) {
+      originalConfig._retryCount = (originalConfig._retryCount || 0) + 1;
+      useServerHealthStore.getState().setWarmingUp();
+
+      const backoffMs = originalConfig._retryCount * 1200;
+      await new Promise((resolve) => setTimeout(resolve, backoffMs));
+
+      try {
+        return await api(originalConfig);
+      } catch (retryErr) {
+        return Promise.reject(retryErr);
+      }
+    }
 
     if (isNetworkOrDown) {
       useServerHealthStore.getState().setServerOffline(
@@ -71,10 +93,13 @@ api.interceptors.response.use(
     }
 
     if (error.response && error.response.status === 401) {
-      // If unauthorized and on protected page, clear token
+      // If unauthorized and on protected page, clear token and sync auth store
       if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
         localStorage.removeItem('campuswise_token');
         localStorage.removeItem('campuswise_user');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('campuswise:auth-unauthorized'));
+        }
       }
     }
     return Promise.reject(error);

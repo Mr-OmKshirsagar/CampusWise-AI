@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import axios from 'axios';
 import { toast } from './toastStore.js';
 
+const getHealthUrl = () => {
+  const rawBaseUrl = (import.meta.env.VITE_API_URL || '/api').trim().replace(/\/+$/, '');
+  return rawBaseUrl.endsWith('/api') ? `${rawBaseUrl}/health` : `${rawBaseUrl}/api/health`;
+};
+
 export const useServerHealthStore = create((set, get) => ({
   status: 'online', // 'online' | 'warming_up' | 'offline'
   isServerOnline: true,
@@ -9,10 +14,12 @@ export const useServerHealthStore = create((set, get) => ({
   healthCheckTimer: null,
 
   setServerOnline: () => {
-    const { wasServerOffline, healthCheckTimer } = get();
+    const { wasServerOffline, healthCheckTimer, status } = get();
     if (healthCheckTimer) {
       clearInterval(healthCheckTimer);
     }
+
+    const wasDown = wasServerOffline || status !== 'online';
 
     if (wasServerOffline) {
       toast.success(
@@ -29,6 +36,13 @@ export const useServerHealthStore = create((set, get) => ({
       wasServerOffline: false,
       healthCheckTimer: null,
     });
+
+    if (wasDown) {
+      // Broadcast event so all active components and stores reload their data immediately
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('campuswise:server-online'));
+      }
+    }
   },
 
   setWarmingUp: () => {
@@ -59,19 +73,18 @@ export const useServerHealthStore = create((set, get) => ({
 
     // Start background auto-poll heartbeat to detect when server comes back online
     if (!healthCheckTimer) {
-      const rawBaseUrl = (import.meta.env.VITE_API_URL || '/api').trim().replace(/\/+$/, '');
-      const healthUrl = rawBaseUrl.endsWith('/api') ? `${rawBaseUrl}/health` : `${rawBaseUrl}/api/health`;
+      const healthUrl = getHealthUrl();
 
       const timer = setInterval(async () => {
         try {
-          const res = await axios.get(healthUrl, { timeout: 4500 });
+          const res = await axios.get(healthUrl, { timeout: 6000 });
           if (res.status === 200) {
             get().setServerOnline();
           }
         } catch (e) {
           // Still waiting for backend to spin up or restart
         }
-      }, 5500);
+      }, 3000);
 
       set({ healthCheckTimer: timer });
     }
@@ -79,9 +92,8 @@ export const useServerHealthStore = create((set, get) => ({
 
   checkHealth: async (silent = true) => {
     try {
-      const rawBaseUrl = (import.meta.env.VITE_API_URL || '/api').trim().replace(/\/+$/, '');
-      const healthUrl = rawBaseUrl.endsWith('/api') ? `${rawBaseUrl}/health` : `${rawBaseUrl}/api/health`;
-      const res = await axios.get(healthUrl, { timeout: 3500 });
+      const healthUrl = getHealthUrl();
+      const res = await axios.get(healthUrl, { timeout: 6000 });
       if (res.status === 200) {
         get().setServerOnline();
       }
@@ -90,3 +102,14 @@ export const useServerHealthStore = create((set, get) => ({
     }
   },
 }));
+
+// Auto-check health when window gains focus or network reconnects
+if (typeof window !== 'undefined') {
+  window.addEventListener('focus', () => {
+    useServerHealthStore.getState().checkHealth(true);
+  });
+  window.addEventListener('online', () => {
+    useServerHealthStore.getState().checkHealth(false);
+  });
+}
+

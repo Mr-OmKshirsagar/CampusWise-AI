@@ -90,5 +90,26 @@ export const useAuthStore = create((set, get) => ({
     });
   },
 
+  syncOnServerOnline: async () => {
+    if (get().token) {
+      try {
+        await get().fetchMe();
+      } catch (_) {
+        // Handled internally in fetchMe
+      }
+    }
+  },
+
   clearError: () => set({ error: null }),
 }));
+
+// Automatically sync user session when backend server comes back online
+if (typeof window !== 'undefined') {
+  window.addEventListener('campuswise:server-online', () => {
+    useAuthStore.getState().syncOnServerOnline?.();
+  });
+  window.addEventListener('campuswise:auth-unauthorized', () => {
+    useAuthStore.getState().logout();
+  });
+}
+

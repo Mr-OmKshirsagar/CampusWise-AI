@@ -99,11 +99,7 @@ export default function AdminAnalyticsPage() {
       setRefreshStatus('refreshed');
       useServerHealthStore.getState().setServerOnline();
 
-      if (wasWarmedUp) {
-        toast.success('Backend server is live and Analytics Telemetry is synchronized!', 'Server Online');
-      } else if (isRetryAttempt) {
-        toast.success('Backend server reconnected & Telemetry metrics fetched!', 'Connection Restored');
-      } else if (isManual) {
+      if (isManual) {
         toast.success('Telemetry metrics refreshed successfully!', 'Analytics Updated');
       }
 
@@ -113,6 +109,11 @@ export default function AdminAnalyticsPage() {
     } catch (err) {
       clearAllTimers();
       console.error('Failed to fetch analytics stats:', err);
+
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setRefreshStatus('failed');
+        return;
+      }
 
       setRefreshStatus('failed');
       useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
@@ -126,8 +127,15 @@ export default function AdminAnalyticsPage() {
   useEffect(() => {
     fetchStats(false);
 
+    const handleServerOnline = () => {
+      fetchStats(false);
+    };
+
+    window.addEventListener('campuswise:server-online', handleServerOnline);
+
     return () => {
       clearAllTimers();
+      window.removeEventListener('campuswise:server-online', handleServerOnline);
     };
   }, []);
 
@@ -267,7 +275,7 @@ export default function AdminAnalyticsPage() {
             </span>
             <span className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
-              pgvector Engine v1.1
+              pgvector Engine v1.2
             </span>
           </div>
           <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
