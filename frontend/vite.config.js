@@ -22,6 +22,7 @@ export default defineConfig({
     },
   },
   server: {
+    host: true, // Expose to local network (0.0.0.0) for cross-device testing
     port: 5173,
     proxy: {
       '/api': {

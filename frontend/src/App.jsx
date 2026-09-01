@@ -40,7 +40,7 @@ export default function App() {
         <ToastContainer />
 
         <Navbar />
-        <div className="flex-1 pt-16 flex flex-col min-h-0">
+        <div className="flex-1 pt-16 flex flex-col min-h-0 w-full max-w-full overflow-x-hidden">
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />

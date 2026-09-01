@@ -59,6 +59,18 @@ export default function Sidebar({
     if (fetchConversations) {
       fetchConversations();
     }
+
+    const handleServerOnline = () => {
+      if (fetchConversations) {
+        fetchConversations();
+      }
+    };
+
+    window.addEventListener('campuswise:server-online', handleServerOnline);
+
+    return () => {
+      window.removeEventListener('campuswise:server-online', handleServerOnline);
+    };
   }, [fetchConversations]);
 
   // Detect newly added conversation automatically when user sends query

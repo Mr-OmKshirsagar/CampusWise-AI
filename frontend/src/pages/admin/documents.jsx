@@ -100,11 +100,9 @@ export default function AdminDocumentsPage() {
       setRefreshStatus('refreshed');
       useServerHealthStore.getState().setServerOnline();
 
-      // Toast notification: differentiate between Render cold start boot & reconnect after failure
-      if (wasWarmedUp) {
-        toast.success('Backend server is live and Knowledge Base is synchronized!', 'Server Online');
-      } else if (isRetryAttempt) {
-        toast.success('Backend server reconnected & Knowledge Base data fetched!', 'Connection Restored');
+      // Toast notification for manual refresh
+      if (isManual) {
+        toast.success('Knowledge Base synchronized successfully!', 'Documents Refreshed');
       }
 
       setTimeout(() => {
@@ -114,11 +112,14 @@ export default function AdminDocumentsPage() {
       clearAllTimers();
       console.error('Failed to load documents:', err);
 
-      const isNetworkOrDown =
-        !err.response ||
-        err.code === 'ERR_NETWORK' ||
-        err.code === 'ECONNABORTED' ||
-        (err.response && [502, 503, 504].includes(err.response.status));
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setRefreshStatus('failed');
+        return;
+      }
+
+      // Condition B: Failed to connect / backend down
+      setRefreshStatus('failed');
+      useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
 
       if (isNetworkOrDown) {
         setRefreshStatus('failed');
@@ -138,8 +139,15 @@ export default function AdminDocumentsPage() {
     // Initial page load or browser refresh
     loadData(false);
 
+    const handleServerOnline = () => {
+      loadData(false);
+    };
+
+    window.addEventListener('campuswise:server-online', handleServerOnline);
+
     return () => {
       clearAllTimers();
+      window.removeEventListener('campuswise:server-online', handleServerOnline);
     };
   }, []);
 
@@ -178,22 +186,22 @@ export default function AdminDocumentsPage() {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] px-3 py-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white overflow-x-hidden">
+    <div className="min-h-[calc(100dvh-4rem)] w-full max-w-full overflow-x-hidden p-2.5 xs:p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
       {/* ══════════════════════════════════════════════════════════════
           1. HEADER & DYNAMIC SITUATIONAL REFRESH BUTTON
          ══════════════════════════════════════════════════════════════ */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
-        <div className="space-y-1.5 min-w-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 pb-1 sm:pb-2">
+        <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/35 shadow-liquid-sm shrink-0">
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/35 shadow-liquid-sm">
               Admin Ingestion Engine
             </span>
             <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">• pgvector Knowledge Base</span>
           </div>
-          <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight break-words">
+          <h1 className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
             Institutional Document Ingestion
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
             Upload institutional PDFs, parse structural text, compute 768-dim embeddings, and manage vector indices.
           </p>
         </div>
@@ -202,16 +210,16 @@ export default function AdminDocumentsPage() {
         <button
           onClick={handleManualButtonClick}
           disabled={refreshStatus === 'refreshing' || refreshStatus === 'warming_up'}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all self-start md:self-auto active:scale-95 shadow-liquid-sm border text-xs font-bold cursor-pointer duration-300 ${
+          className={`flex items-center justify-center gap-2 px-4 xs:px-5 py-2.5 rounded-2xl transition-all w-full sm:w-auto self-stretch sm:self-auto active:scale-95 shadow-liquid-sm border text-xs font-bold cursor-pointer duration-300 ${
             refreshStatus === 'refreshed'
-              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.35)] scale-105'
+              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.35)] scale-100 sm:scale-105'
               : refreshStatus === 'warming_up'
               ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-wait animate-pulse'
               : refreshStatus === 'failed'
               ? 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.35)] hover:bg-rose-500/20'
               : refreshStatus === 'refreshing'
               ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/50 shadow-glow-blue cursor-wait'
-              : 'glass-panel-elevated text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200/90 dark:border-white/[0.12] hover:scale-105'
+              : 'glass-panel-elevated text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200/90 dark:border-white/[0.12] hover:scale-[1.02] sm:hover:scale-105'
           }`}
           title={
             refreshStatus === 'warming_up'
@@ -260,28 +268,28 @@ export default function AdminDocumentsPage() {
           2. APPLE CONTROL CENTER METRIC WIDGETS WITH INCREASING NUMBER ANIMATION
          ══════════════════════════════════════════════════════════════ */}
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-5">
           {/* Tile 1: Total Documents */}
-          <div className="relative group glass-panel-elevated p-4 sm:p-6 rounded-3xl sm:rounded-4xl border border-sky-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+          <div className="relative group glass-panel-elevated p-4 xs:p-5 sm:p-6 rounded-3xl sm:rounded-4xl border border-sky-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
-            <div className="relative z-10 space-y-3">
+            <div className="relative z-10 space-y-2.5 sm:space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Indexed Files
                 </span>
                 <GlassIcon icon={FileText} variant="cyan" size="xs" />
               </div>
 
               <div>
-                <div className="font-display text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
+                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
                   <AnimatedCounter value={stats.totalDocuments || 0} duration={1200} />
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                <p className="text-[10px] xs:text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
                   <span className="text-sky-600 dark:text-sky-400 font-bold">Institutional Circulars</span>
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[11px] font-mono">
+              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[10px] xs:text-[11px] font-mono">
                 <span className="text-slate-500 dark:text-slate-400">Status:</span>
                 <span className="text-emerald-600 dark:text-emerald-400 font-bold">Synchronized</span>
               </div>
@@ -289,45 +297,45 @@ export default function AdminDocumentsPage() {
           </div>
 
           {/* Tile 2: Indexed Chunks */}
-          <div className="relative group glass-panel-elevated p-4 sm:p-6 rounded-3xl sm:rounded-4xl border border-purple-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+          <div className="relative group glass-panel-elevated p-4 xs:p-5 sm:p-6 rounded-3xl sm:rounded-4xl border border-purple-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
-            <div className="relative z-10 space-y-3">
+            <div className="relative z-10 space-y-2.5 sm:space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Vector Chunks
                 </span>
                 <GlassIcon icon={Layers} variant="purple" size="xs" />
               </div>
 
               <div>
-                <div className="font-display text-3xl sm:text-4xl font-extrabold text-purple-600 dark:text-purple-400 font-mono tracking-tight">
+                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-purple-600 dark:text-purple-400 font-mono tracking-tight">
                   <AnimatedCounter value={stats.totalChunks || 0} duration={1300} />
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                <p className="text-[10px] xs:text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
                   <span className="text-purple-600 dark:text-purple-400 font-bold">768-Dim Text Embeddings</span>
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[11px] font-mono">
+              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[10px] xs:text-[11px] font-mono">
                 <span className="text-slate-500 dark:text-slate-400">Embedding:</span>
-                <span className="text-purple-600 dark:text-purple-400 font-bold">text-embedding-004</span>
+                <span className="text-purple-600 dark:text-purple-400 font-bold truncate">text-embedding-004</span>
               </div>
             </div>
           </div>
 
           {/* Tile 3: Storage Size */}
-          <div className="relative group glass-panel-elevated p-4 sm:p-6 rounded-3xl sm:rounded-4xl border border-emerald-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+          <div className="relative group glass-panel-elevated p-4 xs:p-5 sm:p-6 rounded-3xl sm:rounded-4xl border border-emerald-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg sm:col-span-2 lg:col-span-1">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
-            <div className="relative z-10 space-y-3">
+            <div className="relative z-10 space-y-2.5 sm:space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <span className="text-[10px] xs:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Storage Footprint
                 </span>
                 <GlassIcon icon={HardDrive} variant="emerald" size="xs" />
               </div>
 
               <div>
-                <div className="font-display text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
+                <div className="font-display text-2xl xs:text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
                   <AnimatedCounter
                     value={stats.totalStorageBytes ? stats.totalStorageBytes / (1024 * 1024) : 0}
                     decimals={2}
@@ -335,12 +343,12 @@ export default function AdminDocumentsPage() {
                     duration={1400}
                   />
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                <p className="text-[10px] xs:text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
                   <span className="text-emerald-600 dark:text-emerald-400 font-bold">PostgreSQL Binary Store</span>
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[11px] font-mono">
+              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[10px] xs:text-[11px] font-mono">
                 <span className="text-slate-500 dark:text-slate-400">Engine:</span>
                 <span className="text-emerald-600 dark:text-emerald-400 font-bold">pgvector Extension</span>
               </div>
@@ -357,13 +365,13 @@ export default function AdminDocumentsPage() {
       {/* ══════════════════════════════════════════════════════════════
           4. DOCUMENTS DATA TABLE
          ══════════════════════════════════════════════════════════════ */}
-      <div className="space-y-3.5">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <Database className="w-4 h-4 text-sky-500 dark:text-sky-400" />
+      <div className="space-y-3">
+        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-2">
+          <h2 className="font-display text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Database className="w-4 h-4 text-sky-500 dark:text-sky-400 shrink-0" />
             <span>Indexed Institutional Records</span>
           </h2>
-          <span className="glass-badge px-3.5 py-1 rounded-full text-[11px] font-mono font-bold text-sky-600 dark:text-sky-400 shadow-liquid-sm">
+          <span className="glass-badge px-3 py-0.5 sm:px-3.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-bold text-sky-600 dark:text-sky-400 shadow-liquid-sm self-start xs:self-auto">
             <AnimatedCounter value={documents.length} duration={800} /> Total Records
           </span>
         </div>

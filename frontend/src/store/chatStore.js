@@ -237,4 +237,27 @@ export const useChatStore = create((set, get) => ({
   setCategoryFilter: (category) => {
     set({ categoryFilter: category });
   },
+
+  // Synchronize conversation threads and active conversation when backend reconnects
+  syncOnServerOnline: async () => {
+    try {
+      const token = localStorage.getItem('campuswise_token');
+      if (!token) return;
+      await get().fetchConversations();
+      const activeId = get().currentConversationId;
+      if (activeId) {
+        await get().selectConversation(activeId);
+      }
+    } catch (err) {
+      console.warn('[ChatStore] Sync on reconnect failed:', err);
+    }
+  },
 }));
+
+// Automatically sync conversations when backend server comes back online
+if (typeof window !== 'undefined') {
+  window.addEventListener('campuswise:server-online', () => {
+    useChatStore.getState().syncOnServerOnline?.();
+  });
+}
+

@@ -49,7 +49,8 @@ const corsOptions = {
       origin.endsWith('.vercel.app') ||
       origin.endsWith('.onrender.com') ||
       origin.includes('localhost') ||
-      origin.includes('127.0.0.1')
+      origin.includes('127.0.0.1') ||
+      /^https?:\/\/(192\.168|10|172\.(1[6-9]|2[0-9]|3[0-1]))\./.test(origin)
     ) {
       return callback(null, true);
     }
@@ -156,8 +157,8 @@ app.use((err, req, res, next) => {
 export async function startServer(port = env.port) {
   await initDb();
   return new Promise((resolve) => {
-    const server = app.listen(port, () => {
-      console.log(`[CampusWise AI] Server running at http://localhost:${port} in ${env.nodeEnv} mode`);
+    const server = app.listen(port, '0.0.0.0', () => {
+      console.log(`[CampusWise AI] Server running at http://0.0.0.0:${port} in ${env.nodeEnv} mode`);
       resolve(server);
     });
   });

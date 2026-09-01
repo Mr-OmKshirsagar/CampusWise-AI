@@ -99,11 +99,7 @@ export default function AdminAnalyticsPage() {
       setRefreshStatus('refreshed');
       useServerHealthStore.getState().setServerOnline();
 
-      if (wasWarmedUp) {
-        toast.success('Backend server is live and Analytics Telemetry is synchronized!', 'Server Online');
-      } else if (isRetryAttempt) {
-        toast.success('Backend server reconnected & Telemetry metrics fetched!', 'Connection Restored');
-      } else if (isManual) {
+      if (isManual) {
         toast.success('Telemetry metrics refreshed successfully!', 'Analytics Updated');
       }
 
@@ -114,11 +110,13 @@ export default function AdminAnalyticsPage() {
       clearAllTimers();
       console.error('Failed to fetch analytics stats:', err);
 
-      const isNetworkOrDown =
-        !err.response ||
-        err.code === 'ERR_NETWORK' ||
-        err.code === 'ECONNABORTED' ||
-        (err.response && [502, 503, 504].includes(err.response.status));
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        setRefreshStatus('failed');
+        return;
+      }
+
+      setRefreshStatus('failed');
+      useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
 
       if (isNetworkOrDown) {
         setRefreshStatus('failed');
@@ -137,8 +135,15 @@ export default function AdminAnalyticsPage() {
   useEffect(() => {
     fetchStats(false);
 
+    const handleServerOnline = () => {
+      fetchStats(false);
+    };
+
+    window.addEventListener('campuswise:server-online', handleServerOnline);
+
     return () => {
       clearAllTimers();
+      window.removeEventListener('campuswise:server-online', handleServerOnline);
     };
   }, []);
 
