@@ -12,6 +12,7 @@ export const useChatStore = create((set, get) => ({
   selectedSource: null,
   isSourceDrawerOpen: false,
   categoryFilter: null,
+  lastAutoRenamedId: null,
   suggestedQuestions: [
     { text: "What is the minimum attendance required to appear for examinations?", category: "Academics" },
     { text: "What is the refund policy if I cancel my B.Tech admission?", category: "Admissions" },
@@ -58,8 +59,17 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  // Create new conversation
-  createNewConversation: async (title = 'New Conversation') => {
+  // Switch to a new blank draft session without creating a conversation in DB yet
+  startNewChatDraft: () => {
+    set({
+      currentConversationId: null,
+      currentConversation: null,
+      messages: [],
+    });
+  },
+
+  // Initialize a new blank conversation (called only when query is sent or explicitly requested)
+  createNewConversation: async (title = 'New Query') => {
     try {
       const res = await chatApi.createConversation(title);
       const newConv = res.data.conversation;
@@ -72,32 +82,36 @@ export const useChatStore = create((set, get) => ({
       return newConv;
     } catch (err) {
       console.error('[ChatStore] Error creating conversation:', err);
-      throw err;
+      return null;
     }
   },
 
-  // Send message and get grounded RAG response
-  sendMessage: async (queryText) => {
-    let convId = get().currentConversationId;
-    const category = get().categoryFilter;
+  // Send a message and handle AI retrieval response
+  sendQuery: async (queryText, category = null) => {
+    if (!queryText || !queryText.trim()) return;
 
-    // If no active conversation, create one automatically
+    const finalCategory = category !== undefined && category !== null ? category : get().categoryFilter;
+    const cleanCategory = finalCategory === 'All' ? null : finalCategory;
+
+    let convId = get().currentConversationId;
+
+    // Only create the conversation in DB and add to sidebar when the user sends a query
     if (!convId) {
-      const cleanTitle = queryText.slice(0, 35) + (queryText.length > 35 ? '...' : '');
-      const newConv = await get().createNewConversation(cleanTitle);
+      const initialTitle = queryText.slice(0, 40) || 'New Query';
+      const newConv = await get().createNewConversation(initialTitle);
+      if (!newConv) return;
       convId = newConv.id;
     }
 
-    // Optimistically add student's message
     const tempUserMessage = {
       id: `temp-${Date.now()}`,
       conversation_id: convId,
       sender: 'user',
       content: queryText,
-      sources: [],
       created_at: new Date().toISOString(),
     };
 
+    // Optimistically update UI
     set((state) => ({
       messages: [...state.messages, tempUserMessage],
       isSendingQuery: true,
@@ -106,10 +120,14 @@ export const useChatStore = create((set, get) => ({
     try {
       const res = await chatApi.sendQuery(convId, {
         query: queryText,
-        categoryFilter: category,
+        categoryFilter: cleanCategory,
       });
 
       const { assistantMessage, conversationTitle } = res.data;
+      const prevTitle = get().currentConversation?.title;
+      const isAutoRenamed =
+        Boolean(conversationTitle) &&
+        (!prevTitle || prevTitle === 'New Query' || prevTitle !== conversationTitle);
 
       // Replace optimistic message and append assistant response
       set((state) => ({
@@ -128,8 +146,17 @@ export const useChatStore = create((set, get) => ({
                 c.id === convId ? { ...c, title: conversationTitle } : c
               )
             : state.conversations,
+        lastAutoRenamedId: isAutoRenamed ? convId : state.lastAutoRenamedId,
         isSendingQuery: false,
       }));
+
+      if (isAutoRenamed) {
+        setTimeout(() => {
+          set((state) => ({
+            lastAutoRenamedId: state.lastAutoRenamedId === convId ? null : state.lastAutoRenamedId,
+          }));
+        }, 2800);
+      }
 
       // Refresh conversations list to update titles/timestamps
       get().fetchConversations();
@@ -143,7 +170,6 @@ export const useChatStore = create((set, get) => ({
         sources: [],
         created_at: new Date().toISOString(),
       };
-
       set((state) => ({
         messages: [...state.messages, errorAssistantMsg],
         isSendingQuery: false,
@@ -151,28 +177,12 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  // Rename conversation
-  renameConversation: async (id, newTitle) => {
-    try {
-      const res = await chatApi.renameConversation(id, newTitle);
-      const updated = res.data.conversation;
-      set((state) => ({
-        conversations: state.conversations.map((c) =>
-          c.id === id ? { ...c, title: updated.title } : c
-        ),
-        currentConversation:
-          state.currentConversationId === id
-            ? { ...state.currentConversation, title: updated.title }
-            : state.currentConversation,
-      }));
-      return updated;
-    } catch (err) {
-      console.error('[ChatStore] Error renaming conversation:', err);
-      throw err;
-    }
+  // Alias for sendQuery
+  sendMessage: async (queryText, category = null) => {
+    return get().sendQuery(queryText, category);
   },
 
-  // Delete conversation
+  // Delete a conversation
   deleteConversation: async (id) => {
     try {
       await chatApi.deleteConversation(id);
@@ -181,26 +191,49 @@ export const useChatStore = create((set, get) => ({
         const isCurrent = state.currentConversationId === id;
         return {
           conversations: remaining,
-          currentConversationId: isCurrent ? null : state.currentConversationId,
-          currentConversation: isCurrent ? null : state.currentConversation,
+          currentConversationId: isCurrent ? (remaining[0]?.id || null) : state.currentConversationId,
+          currentConversation: isCurrent ? (remaining[0] || null) : state.currentConversation,
           messages: isCurrent ? [] : state.messages,
         };
       });
+      if (get().currentConversationId) {
+        get().selectConversation(get().currentConversationId);
+      }
     } catch (err) {
       console.error('[ChatStore] Error deleting conversation:', err);
+      throw err;
     }
   },
 
-  // Citation Drawer Controls
+  // Rename a conversation
+  renameConversation: async (id, title) => {
+    try {
+      const res = await chatApi.renameConversation(id, title);
+      set((state) => ({
+        conversations: state.conversations.map((c) =>
+          c.id === id ? { ...c, title: res.data.conversation.title } : c
+        ),
+        currentConversation:
+          state.currentConversationId === id
+            ? { ...state.currentConversation, title: res.data.conversation.title }
+            : state.currentConversation,
+      }));
+      return res.data.conversation;
+    } catch (err) {
+      console.error('[ChatStore] Error renaming conversation:', err);
+      throw err;
+    }
+  },
+
+  // Set selected citation for sliding drawer
   openSourceDrawer: (source) => {
     set({ selectedSource: source, isSourceDrawerOpen: true });
   },
 
   closeSourceDrawer: () => {
-    set({ isSourceDrawerOpen: false, selectedSource: null });
+    set({ selectedSource: null, isSourceDrawerOpen: false });
   },
 
-  // Category Filter
   setCategoryFilter: (category) => {
     set({ categoryFilter: category });
   },

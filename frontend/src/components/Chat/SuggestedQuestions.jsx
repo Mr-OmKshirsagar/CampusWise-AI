@@ -13,7 +13,7 @@ export default function SuggestedQuestions({ questions = [], onSelect }) {
   if (!questions || questions.length === 0) return null;
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-4">
+    <div className="w-full max-w-3xl mx-auto space-y-3.5">
       <div className="flex items-center gap-2 justify-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
         <Sparkles className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
         <span>Suggested Campus Queries</span>
@@ -26,7 +26,7 @@ export default function SuggestedQuestions({ questions = [], onSelect }) {
             <button
               key={index}
               onClick={() => onSelect(q.text)}
-              className="glass-card p-3.5 sm:p-4 rounded-2xl text-left border-slate-200 dark:border-white/[0.08] hover:border-sky-500/40 hover:bg-sky-500/5 dark:hover:bg-sky-950/30 transition-all flex items-start gap-3 group active:scale-[0.98] shadow-sm"
+              className="glass-card p-3.5 sm:p-4 rounded-3xl text-left border-slate-200/90 dark:border-white/[0.08] hover:border-sky-500/40 hover:bg-sky-500/5 dark:hover:bg-sky-950/30 transition-all flex items-start gap-3 group active:scale-[0.98] shadow-liquid-sm"
             >
               <GlassIcon icon={catInfo.icon} variant={catInfo.variant} size="xs" />
 

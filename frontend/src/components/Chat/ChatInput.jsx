@@ -1,36 +1,39 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, Filter, Loader2, CornerDownLeft } from 'lucide-react';
+import { Send, Sparkles, Filter, Check, ArrowUp, Loader2 } from 'lucide-react';
 import { useChatStore } from '../../store/chatStore.js';
+import LiquidSegmentedControl from '../Common/LiquidSegmentedControl.jsx';
 
-const CATEGORIES = [
-  { id: null, label: 'All Topics' },
-  { id: 'Admissions', label: 'Admissions' },
-  { id: 'Academics', label: 'Academics' },
-  { id: 'Hostel', label: 'Hostel' },
-  { id: 'Fees', label: 'Fees' },
-  { id: 'Exams', label: 'Exams' },
+const DOMAIN_CATEGORIES = [
+  { id: 'All', label: 'All', color: 'lime' },
+  { id: 'Admissions', label: 'Admissions', color: 'emerald' },
+  { id: 'Academics', label: 'Academics', color: 'cyan' },
+  { id: 'Hostel', label: 'Hostel', color: 'amber' },
+  { id: 'Fees', label: 'Fees', color: 'purple' },
+  { id: 'Exams', label: 'Exams', color: 'rose' },
+  { id: 'Placements', label: 'Placements', color: 'indigo' },
 ];
 
-export default function ChatInput({ onSendMessage, disabled }) {
-  const [input, setInput] = useState('');
-  const { isSendingQuery, categoryFilter, setCategoryFilter } = useChatStore();
+export default function ChatInput() {
+  const [query, setQuery] = useState('');
+  const { sendQuery, sendMessage, isSendingQuery, categoryFilter, setCategoryFilter } = useChatStore();
   const textareaRef = useRef(null);
 
-  // Auto-resize textarea based on content
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 140)}px`;
     }
-  }, [input]);
+  }, [query]);
 
   const handleSubmit = (e) => {
     e?.preventDefault();
-    if (!input.trim() || isSendingQuery || disabled) return;
-    onSendMessage(input.trim());
-    setInput('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+    if (!query.trim() || isSendingQuery) return;
+    const textToSend = query.trim();
+    setQuery('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    const sendFn = sendQuery || sendMessage;
+    if (sendFn) {
+      sendFn(textToSend, categoryFilter);
     }
   };
 
@@ -41,71 +44,63 @@ export default function ChatInput({ onSendMessage, disabled }) {
     }
   };
 
+  const currentCategory = categoryFilter || 'All';
+
+  const handleSelectCategory = (cat) => {
+    setCategoryFilter(cat === 'All' ? null : cat);
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-2">
-      {/* Scope Filter Chips (CSS Flexbox Responsive Wrapping - No Scrollbars) */}
-      <div className="flex flex-wrap items-center gap-1.5 text-xs select-none">
-        <span className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-[11px] font-bold flex items-center gap-1 shrink-0 mr-1">
-          <Filter className="w-3 h-3 text-sky-500 dark:text-sky-400" />
+    <div className="w-full max-w-4xl mx-auto space-y-2 px-2 sm:px-4 pb-2 sm:pb-3">
+      {/* Apple WWDC25 Sliding Liquid Glass Category Filter Switcher with Touch Pan */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1 touch-scroll-momentum touch-pan-x">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 shrink-0 flex items-center gap-1">
+          <Filter className="w-3 h-3 text-sky-500" />
           Filter:
         </span>
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.label}
-            type="button"
-            onClick={() => setCategoryFilter(cat.id)}
-            className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-semibold transition-all shrink-0 active:scale-95 ${
-              categoryFilter === cat.id
-                ? 'bg-sky-500/15 dark:bg-sky-500/20 text-sky-700 dark:text-sky-200 border border-sky-500/35 dark:border-sky-500/40 shadow-sm dark:shadow-glow-cyan scale-105'
-                : 'glass-badge text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-black/5 dark:hover:bg-white/[0.08]'
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
+        <LiquidSegmentedControl
+          options={DOMAIN_CATEGORIES}
+          value={currentCategory}
+          onChange={handleSelectCategory}
+          className="p-0.5"
+        />
       </div>
 
-      {/* Main Glass Input Field (CSS Flexbox) */}
+      {/* Inset Liquid Glass Input Form with Continuous Rounded Squircle */}
       <form
         onSubmit={handleSubmit}
-        className="relative glass-panel-elevated rounded-2xl sm:rounded-3xl p-1.5 sm:p-2.5 flex items-end gap-1.5 sm:gap-2 border border-slate-200 dark:border-white/[0.12] focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all shadow-md dark:shadow-glass-lg bg-white/90 dark:bg-[#070b12]/90"
+        className="relative flex items-end gap-2 p-2 sm:p-2.5 rounded-4xl glass-panel-elevated border border-slate-200/90 dark:border-white/[0.12] shadow-liquid-md dark:shadow-glass-lg focus-within:border-sky-500/50 focus-within:ring-4 focus-within:ring-sky-500/15 transition-all duration-300 bg-white/90 dark:bg-[#070b12]/90 backdrop-blur-2xl"
       >
         <textarea
           ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask anything about admissions, attendance, fees, exams, hostel..."
-          disabled={isSendingQuery || disabled}
           rows={1}
-          className="flex-1 bg-transparent text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none resize-none px-2.5 sm:px-3 py-2 max-h-32 sm:max-h-40 min-h-[38px] sm:min-h-[42px] leading-relaxed"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={`Ask anything about ${currentCategory === 'All' ? 'campus rules, fees, hostels, or exams' : currentCategory.toLowerCase()}...`}
+          className="flex-1 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 max-h-32 px-3 py-2 leading-relaxed"
         />
 
         <button
           type="submit"
-          disabled={!input.trim() || isSendingQuery || disabled}
-          className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shrink-0 min-w-[38px] min-h-[38px] sm:min-w-[44px] sm:min-h-[44px] ${
-            input.trim() && !isSendingQuery && !disabled
-              ? 'bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-600 text-white shadow-sm dark:shadow-glow-blue hover:scale-105 active:scale-95'
-              : 'glass-badge text-slate-400 dark:text-slate-500 cursor-not-allowed'
-          }`}
-          title="Send query (Enter)"
+          disabled={!query.trim() || isSendingQuery}
+          className="group relative w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-tr from-sky-500 via-electric-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white flex items-center justify-center shrink-0 shadow-liquid-md dark:shadow-glow-blue transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] disabled:opacity-30 disabled:scale-95 disabled:hover:scale-95 hover:scale-105 active:scale-90 cursor-pointer overflow-hidden select-none"
+          title="Send query"
+          aria-label="Send message"
         >
+          {/* Top-down Specular Reflection Sheen */}
+          <div className="absolute inset-x-1.5 top-0.5 h-1/2 bg-gradient-to-b from-white/70 to-transparent rounded-full pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
+
+          {/* Bottom Chromatic Dispersion Rainbow Refraction Line */}
+          <div className="absolute inset-x-2 bottom-0 h-[1.5px] bg-gradient-to-r from-pink-400/80 via-cyan-300/90 to-emerald-400/80 blur-[0.5px] rounded-full pointer-events-none opacity-0 group-hover:opacity-90 transition-opacity duration-300" />
+
           {isSendingQuery ? (
-            <Loader2 className="w-4 h-4 animate-spin text-sky-500 dark:text-sky-300" />
+            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin relative z-10" />
           ) : (
-            <Send className="w-4 h-4" />
+            <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5] relative z-10 transition-transform duration-300 group-hover:-translate-y-0.5 group-active:translate-y-0" />
           )}
         </button>
       </form>
-
-      {/* Keyboard Shortcut Subtext (CSS Flexbox) */}
-      <div className="hidden sm:flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-2">
-        <span className="flex items-center gap-1">
-          <CornerDownLeft className="w-2.5 h-2.5" /> Press <strong className="text-slate-600 dark:text-slate-400">Enter</strong> to send, <strong className="text-slate-600 dark:text-slate-400">Shift + Enter</strong> for new line
-        </span>
-        <span>Anti-Hallucination RAG Pipeline Active</span>
-      </div>
     </div>
   );
 }
