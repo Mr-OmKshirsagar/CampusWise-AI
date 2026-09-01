@@ -62,13 +62,20 @@ export const useAuthStore = create((set, get) => ({
     if (!get().token) return null;
     try {
       const response = await authApi.getMe();
-      const user = response.data.user;
-      localStorage.setItem('campuswise_user', JSON.stringify(user));
-      set({ user, isAuthenticated: true });
-      return user;
+      const user = response.data?.user || response.user || response.data;
+      if (user) {
+        localStorage.setItem('campuswise_user', JSON.stringify(user));
+        set({ user, isAuthenticated: true });
+        return user;
+      }
+      return get().user;
     } catch (err) {
-      get().logout();
-      return null;
+      // ONLY invalidate authentication if server explicitly returns 401 Unauthorized or 403 Forbidden
+      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        get().logout();
+      }
+      // Retain cached credentials during network offline or server reboot
+      return get().user;
     }
   },
 
