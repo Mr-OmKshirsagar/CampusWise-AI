@@ -7,7 +7,7 @@ const getInitialTheme = () => {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 };
 
-// Global animation lock to prevent Chromium GPU compositor crashes (STATUS_BREAKPOINT)
+// Global animation lock to prevent Chromium GPU compositor crashes
 let isTransitionInProgress = false;
 let currentWebAnimation = null;
 
@@ -40,8 +40,8 @@ export const useThemeStore = create((set, get) => ({
     }
   },
 
-  toggleTheme: async () => {
-    // 🛡️ Prevent overlapping transition collisions that trigger Chromium STATUS_BREAKPOINT
+  toggleTheme: async (e) => {
+    // 🛡️ Prevent overlapping transition collisions
     if (isTransitionInProgress) return;
     isTransitionInProgress = true;
     set({ isTransitioning: true });
@@ -61,10 +61,22 @@ export const useThemeStore = create((set, get) => ({
       set({ theme: nextTheme });
     };
 
+    // Calculate origin directly from the button click coordinates for instantaneous ripple origin
+    let x = window.innerWidth - 120;
+    let y = 32;
+
+    if (e && e.clientX !== undefined && e.clientY !== undefined && (e.clientX !== 0 || e.clientY !== 0)) {
+      x = e.clientX;
+      y = e.clientY;
+    } else if (e && e.currentTarget && typeof e.currentTarget.getBoundingClientRect === 'function') {
+      const rect = e.currentTarget.getBoundingClientRect();
+      x = rect.left + rect.width / 2;
+      y = rect.top + rect.height / 2;
+    }
+
     // Check if View Transition API is supported
     if (typeof document !== 'undefined' && document.startViewTransition) {
       try {
-        // Cancel any lingering animation safely
         if (currentWebAnimation) {
           try {
             currentWebAnimation.cancel();
@@ -72,11 +84,10 @@ export const useThemeStore = create((set, get) => ({
           currentWebAnimation = null;
         }
 
-        const doc = document.documentElement;
-        const width = Math.max(window.innerWidth || 0, doc.clientWidth || 0, doc.scrollWidth || 0);
-        const height = Math.max(window.innerHeight || 0, doc.clientHeight || 0, doc.scrollHeight || 0);
-        const maxDistance = Math.hypot(width / 2, height);
-        const endRadius = Math.ceil(maxDistance * 1.4);
+        const endRadius = Math.hypot(
+          Math.max(x, window.innerWidth - x),
+          Math.max(y, window.innerHeight - y)
+        );
 
         const transition = document.startViewTransition(() => {
           applyTheme();
@@ -84,18 +95,16 @@ export const useThemeStore = create((set, get) => ({
 
         await transition.ready.catch(() => { });
 
-        const clipPath = [
-          'circle(0px at 50% 0%)',
-          `circle(${endRadius}px at 50% 0%)`,
-        ];
-
         currentWebAnimation = document.documentElement.animate(
           {
-            clipPath: clipPath,
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+            ],
           },
           {
-            duration: 3500,
-            easing: 'linear',
+            duration: 500,
+            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
             fill: 'forwards',
             pseudoElement: '::view-transition-new(root)',
           }
@@ -117,7 +126,7 @@ export const useThemeStore = create((set, get) => ({
     }
   },
 
-  setTheme: async (theme) => {
+  setTheme: async (theme, e) => {
     if (isTransitionInProgress) return;
     isTransitionInProgress = true;
     set({ isTransitioning: true });
@@ -136,6 +145,14 @@ export const useThemeStore = create((set, get) => ({
       set({ theme });
     };
 
+    let x = window.innerWidth - 120;
+    let y = 32;
+
+    if (e && e.clientX !== undefined && e.clientY !== undefined && (e.clientX !== 0 || e.clientY !== 0)) {
+      x = e.clientX;
+      y = e.clientY;
+    }
+
     if (typeof document !== 'undefined' && document.startViewTransition) {
       try {
         if (currentWebAnimation) {
@@ -145,11 +162,10 @@ export const useThemeStore = create((set, get) => ({
           currentWebAnimation = null;
         }
 
-        const doc = document.documentElement;
-        const width = Math.max(window.innerWidth || 0, doc.clientWidth || 0, doc.scrollWidth || 0);
-        const height = Math.max(window.innerHeight || 0, doc.clientHeight || 0, doc.scrollHeight || 0);
-        const maxDistance = Math.hypot(width / 2, height);
-        const endRadius = Math.ceil(maxDistance * 1.4);
+        const endRadius = Math.hypot(
+          Math.max(x, window.innerWidth - x),
+          Math.max(y, window.innerHeight - y)
+        );
 
         const transition = document.startViewTransition(() => {
           applyTheme();
@@ -157,18 +173,16 @@ export const useThemeStore = create((set, get) => ({
 
         await transition.ready.catch(() => { });
 
-        const clipPath = [
-          'circle(0px at 50% 0%)',
-          `circle(${endRadius}px at 50% 0%)`,
-        ];
-
         currentWebAnimation = document.documentElement.animate(
           {
-            clipPath: clipPath,
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+            ],
           },
           {
-            duration: 800,
-            easing: 'linear',
+            duration: 500,
+            easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
             fill: 'forwards',
             pseudoElement: '::view-transition-new(root)',
           }
@@ -190,4 +204,3 @@ export const useThemeStore = create((set, get) => ({
     }
   },
 }));
-
