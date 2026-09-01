@@ -114,10 +114,20 @@ export default function AdminAnalyticsPage() {
       clearAllTimers();
       console.error('Failed to fetch analytics stats:', err);
 
-      setRefreshStatus('failed');
-      useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
+      const isNetworkOrDown =
+        !err.response ||
+        err.code === 'ERR_NETWORK' ||
+        err.code === 'ECONNABORTED' ||
+        (err.response && [502, 503, 504].includes(err.response.status));
 
-      startAutoRetryCountdown(6);
+      if (isNetworkOrDown) {
+        setRefreshStatus('failed');
+        useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
+        startAutoRetryCountdown(6);
+      } else {
+        setRefreshStatus('idle');
+        useServerHealthStore.getState().setServerOnline();
+      }
     } finally {
       setIsLoading(false);
     }

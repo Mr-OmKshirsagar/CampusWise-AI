@@ -81,12 +81,16 @@ export const useServerHealthStore = create((set, get) => ({
     try {
       const rawBaseUrl = (import.meta.env.VITE_API_URL || '/api').trim().replace(/\/+$/, '');
       const healthUrl = rawBaseUrl.endsWith('/api') ? `${rawBaseUrl}/health` : `${rawBaseUrl}/api/health`;
-      const res = await axios.get(healthUrl, { timeout: 3500 });
-      if (res.status === 200) {
+      const res = await axios.get(healthUrl, { timeout: 4500 });
+      if (res.status === 200 || (res.status >= 200 && res.status < 500)) {
         get().setServerOnline();
       }
     } catch (e) {
-      get().setServerOffline(null, silent);
+      if (e.response && ![502, 503, 504].includes(e.response.status)) {
+        get().setServerOnline();
+      } else {
+        get().setServerOffline(null, silent);
+      }
     }
   },
 }));

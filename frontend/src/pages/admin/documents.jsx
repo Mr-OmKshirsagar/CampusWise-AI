@@ -114,12 +114,22 @@ export default function AdminDocumentsPage() {
       clearAllTimers();
       console.error('Failed to load documents:', err);
 
-      // Condition B: Failed to connect / backend down
-      setRefreshStatus('failed');
-      useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
+      const isNetworkOrDown =
+        !err.response ||
+        err.code === 'ERR_NETWORK' ||
+        err.code === 'ECONNABORTED' ||
+        (err.response && [502, 503, 504].includes(err.response.status));
 
-      // Schedule automatic reconnection retry in 6 seconds
-      startAutoRetryCountdown(6);
+      if (isNetworkOrDown) {
+        // Condition B: Failed to connect / backend down
+        setRefreshStatus('failed');
+        useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
+        startAutoRetryCountdown(6);
+      } else {
+        // Server is online, responded with HTTP status (e.g. 401 Unauthorized)
+        setRefreshStatus('idle');
+        useServerHealthStore.getState().setServerOnline();
+      }
     } finally {
       setIsLoading(false);
     }

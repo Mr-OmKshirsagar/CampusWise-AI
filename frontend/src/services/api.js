@@ -68,6 +68,9 @@ api.interceptors.response.use(
         error.response?.data?.error || 'Backend server is unreachable or starting up. Reconnecting in background...',
         isSilent
       );
+    } else {
+      // Server responded with an HTTP status (200, 401, 403, 404, etc.) -> Backend is Online
+      useServerHealthStore.getState().setServerOnline();
     }
 
     if (error.response && error.response.status === 401) {
