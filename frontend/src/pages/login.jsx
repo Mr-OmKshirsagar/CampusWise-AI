@@ -80,7 +80,7 @@ export default function LoginPage() {
         </div>
 
         {/* Quick Demo Credentials Autofill Pill Bar */}
-        <div className="glass-card p-3 rounded-2xl border-slate-200 dark:border-white/[0.08] space-y-2">
+        <div className="glass-card p-3 rounded-4xl border-slate-200/80 dark:border-white/[0.08] space-y-2 shadow-liquid-sm">
           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
             <Sparkles className="w-3 h-3 text-amber-500 dark:text-amber-400" />
             Quick Demo Autofill (1-Click)
@@ -89,27 +89,29 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => fillDemoAccount('student')}
-              className="py-1.5 px-3 rounded-xl glass-badge hover:bg-sky-500/15 text-[11px] font-semibold text-sky-700 dark:text-sky-300 border-sky-500/25 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              className="group relative py-2 px-3 rounded-full glass-panel-elevated bg-white/80 dark:bg-white/[0.04] hover:bg-sky-500/15 text-[11px] font-semibold text-sky-700 dark:text-sky-300 border border-slate-200/90 dark:border-white/[0.12] hover:border-sky-500/40 transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 shadow-liquid-sm cursor-pointer overflow-hidden select-none"
             >
-              <UserCheck className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
-              <span>Student Account</span>
+              <div className="absolute inset-x-1.5 top-0.5 h-1/2 bg-gradient-to-b from-white/60 to-transparent dark:from-white/30 rounded-full pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
+              <UserCheck className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 relative z-10 transition-transform group-hover:scale-110" />
+              <span className="relative z-10">Student Account</span>
             </button>
             <button
               type="button"
               onClick={() => fillDemoAccount('admin')}
-              className="py-1.5 px-3 rounded-xl glass-badge hover:bg-amber-500/15 text-[11px] font-semibold text-amber-700 dark:text-amber-300 border-amber-500/25 transition-all flex items-center justify-center gap-1.5 active:scale-95"
+              className="group relative py-2 px-3 rounded-full glass-panel-elevated bg-white/80 dark:bg-white/[0.04] hover:bg-amber-500/15 text-[11px] font-semibold text-amber-700 dark:text-amber-300 border border-slate-200/90 dark:border-white/[0.12] hover:border-amber-500/40 transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 shadow-liquid-sm cursor-pointer overflow-hidden select-none"
             >
-              <Shield className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-              <span>Admin Account</span>
+              <div className="absolute inset-x-1.5 top-0.5 h-1/2 bg-gradient-to-b from-white/60 to-transparent dark:from-white/30 rounded-full pointer-events-none opacity-60 group-hover:opacity-100 transition-opacity" />
+              <Shield className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 relative z-10 transition-transform group-hover:scale-110" />
+              <span className="relative z-10">Admin Account</span>
             </button>
           </div>
         </div>
 
         {/* Login Form Card */}
-        <div className="glass-panel-elevated p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-white/[0.12] space-y-6 shadow-sm dark:shadow-glass-lg">
+        <div className="glass-panel-elevated p-6 sm:p-8 rounded-4xl border border-slate-200/90 dark:border-white/[0.12] space-y-6 shadow-liquid-md dark:shadow-glass-lg">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-600 dark:text-rose-300 flex items-center gap-2.5 animate-slide-up">
+              <div className="p-3.5 rounded-3xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-600 dark:text-rose-300 flex items-center gap-2.5 animate-slide-up shadow-liquid-sm">
                 <AlertCircle className="w-4 h-4 shrink-0 text-rose-500 dark:text-rose-400" />
                 <span>{error}</span>
               </div>
@@ -118,14 +120,14 @@ export default function LoginPage() {
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wide">College Email</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                <Mail className="w-4 h-4 absolute left-4 top-3.5 text-slate-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="student@campus.edu"
                   required
-                  className="w-full glass-input rounded-xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all"
+                  className="w-full glass-input rounded-3xl pl-11 pr-4 py-2.5 sm:py-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all"
                 />
               </div>
             </div>
@@ -134,7 +136,7 @@ export default function LoginPage() {
               <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wide">Password</label>
               <div className="relative group">
                 <Lock
-                  className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors duration-300 ${
+                  className={`w-4 h-4 absolute left-4 top-3.5 transition-colors duration-300 ${
                     showPassword ? 'text-sky-500 dark:text-sky-400' : 'text-slate-400'
                   }`}
                 />
@@ -144,7 +146,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className={`w-full glass-input rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all duration-300 ${
+                  className={`w-full glass-input rounded-3xl pl-11 pr-11 py-2.5 sm:py-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 transition-all duration-300 ${
                     showPassword
                       ? 'border-sky-500/40 ring-2 ring-sky-500/20 font-mono tracking-normal'
                       : 'tracking-wider'
@@ -154,7 +156,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors duration-200 active:scale-75 focus:outline-none cursor-pointer"
+                  className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors duration-200 active:scale-75 focus:outline-none cursor-pointer"
                 >
                   <span key={showPassword ? 'hide' : 'show'} className="inline-block animate-icon-pop">
                     {showPassword ? (
@@ -170,14 +172,20 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-md dark:shadow-glow-blue flex items-center justify-center gap-2 transition-all disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98]"
+              className="group relative w-full py-3.5 rounded-3xl bg-gradient-to-r from-sky-600 via-electric-500 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-bold text-xs shadow-liquid-md dark:shadow-glow-blue flex items-center justify-center gap-2 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] overflow-hidden select-none cursor-pointer"
             >
+              {/* Top Specular Sheen */}
+              <div className="absolute inset-x-4 top-0.5 h-1/2 bg-gradient-to-b from-white/60 to-transparent rounded-full pointer-events-none opacity-80 group-hover:opacity-100 transition-opacity" />
+
+              {/* Bottom Rainbow Caustic Line */}
+              <div className="absolute inset-x-6 bottom-0 h-[1.5px] bg-gradient-to-r from-pink-400/80 via-cyan-300/90 to-emerald-400/80 blur-[0.5px] rounded-full pointer-events-none opacity-0 group-hover:opacity-90 transition-opacity" />
+
               {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin relative z-10" />
               ) : (
                 <>
-                  <span>Sign In to Portal</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span className="relative z-10">Sign In to Portal</span>
+                  <ArrowRight className="w-4 h-4 relative z-10 transition-transform duration-300 group-hover:translate-x-1" />
                 </>
               )}
             </button>

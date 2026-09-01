@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   FileText,
   Layers,
@@ -9,141 +9,368 @@ import {
   UploadCloud,
   Database,
   Cpu,
+  Plus,
+  FolderOpen,
+  Check,
+  Flame,
+  AlertCircle,
+  RotateCcw,
 } from 'lucide-react';
 import { documentApi } from '../../services/api.js';
 import FileDropzone from '../../components/Admin/FileDropzone.jsx';
 import DocumentTable from '../../components/Admin/DocumentTable.jsx';
 import DocumentViewerModal from '../../components/Admin/DocumentViewerModal.jsx';
 import GlassIcon from '../../components/Common/GlassIcon.jsx';
+import AnimatedCounter from '../../components/Common/AnimatedCounter.jsx';
+import { toast } from '../../store/toastStore.js';
+import { useServerHealthStore } from '../../store/serverHealthStore.js';
 
 export default function AdminDocumentsPage() {
   const [documents, setDocuments] = useState([]);
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshStatus, setRefreshStatus] = useState('idle'); // 'idle' | 'refreshing' | 'warming_up' | 'refreshed' | 'failed'
+  const [retryCountdown, setRetryCountdown] = useState(null);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+  const [newlyAddedId, setNewlyAddedId] = useState(null);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const warmupTimerRef = useRef(null);
+  const retryIntervalRef = useRef(null);
+  const isRetryingRef = useRef(false);
+
+  const clearAllTimers = () => {
+    if (warmupTimerRef.current) {
+      clearTimeout(warmupTimerRef.current);
+      warmupTimerRef.current = null;
+    }
+    if (retryIntervalRef.current) {
+      clearInterval(retryIntervalRef.current);
+      retryIntervalRef.current = null;
+    }
+  };
+
+  const startAutoRetryCountdown = (seconds = 6) => {
+    clearAllTimers();
+    setRetryCountdown(seconds);
+    let currentSec = seconds;
+
+    retryIntervalRef.current = setInterval(() => {
+      currentSec -= 1;
+      if (currentSec > 0) {
+        setRetryCountdown(currentSec);
+      } else {
+        clearInterval(retryIntervalRef.current);
+        retryIntervalRef.current = null;
+        setRetryCountdown(null);
+        isRetryingRef.current = true;
+        loadData(true);
+      }
+    }, 1000);
+  };
+
+  const loadData = async (isManual = false) => {
+    clearAllTimers();
+    setRetryCountdown(null);
+    setRefreshStatus('refreshing');
+    if (!isManual) setIsLoading(true);
+
+    const isRetryAttempt = isRetryingRef.current;
+    let wasWarmedUp = false;
+
+    // Condition A: Detect Render Free Tier Cold Start (Request pending > 2.5s)
+    warmupTimerRef.current = setTimeout(() => {
+      wasWarmedUp = true;
+      setRefreshStatus('warming_up');
+      useServerHealthStore.getState().setWarmingUp();
+    }, 2500);
+
     try {
       const [docsRes, statsRes] = await Promise.all([
-        documentApi.listAll(),
-        documentApi.getStats(),
+        documentApi.listAll(isRetryAttempt ? { silent: true } : {}),
+        documentApi.getStats(isRetryAttempt ? { silent: true } : {}),
       ]);
-      setDocuments(docsRes.data?.documents || []);
-      setStats(statsRes.data?.stats || null);
+
+      clearAllTimers();
+      isRetryingRef.current = false;
+
+      setDocuments(docsRes.documents || docsRes.data?.documents || []);
+      setStats(statsRes.stats || statsRes.data?.stats || null);
+
+      // Successfully loaded / refreshed
+      setRefreshStatus('refreshed');
+      useServerHealthStore.getState().setServerOnline();
+
+      // Toast notification: differentiate between Render cold start boot & reconnect after failure
+      if (wasWarmedUp) {
+        toast.success('Backend server is live and Knowledge Base is synchronized!', 'Server Online');
+      } else if (isRetryAttempt) {
+        toast.success('Backend server reconnected & Knowledge Base data fetched!', 'Connection Restored');
+      }
+
+      setTimeout(() => {
+        setRefreshStatus('idle');
+      }, 2400);
     } catch (err) {
+      clearAllTimers();
       console.error('Failed to load documents:', err);
+
+      // Condition B: Failed to connect / backend down
+      setRefreshStatus('failed');
+      useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
+
+      // Schedule automatic reconnection retry in 6 seconds
+      startAutoRetryCountdown(6);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    // Initial page load or browser refresh
+    loadData(false);
+
+    return () => {
+      clearAllTimers();
+    };
   }, []);
 
-  const handleUploadSuccess = () => {
-    loadData();
+  const handleManualButtonClick = () => {
+    if (refreshStatus === 'warming_up') return; // Do not interrupt Render cold start spin-up
+    clearAllTimers();
+    setRetryCountdown(null);
+    isRetryingRef.current = refreshStatus === 'failed';
+    loadData(true);
   };
 
-  const handleDocumentDeleted = (deletedId) => {
-    setDocuments((prev) => prev.filter((d) => d.id !== deletedId));
-    loadData();
+  const handleUploadSuccess = (newDoc) => {
+    if (newDoc?.id) {
+      setNewlyAddedId(newDoc.id);
+      setTimeout(() => setNewlyAddedId(null), 4000);
+    }
+    loadData(false);
+  };
+
+  const handleDeleteDocument = async (id, docName = 'document') => {
+    if (!id) return;
+    try {
+      await documentApi.delete(id);
+      setDocuments((prev) => prev.filter((d) => d.id !== id));
+      toast.success(`Successfully deleted "${docName}" and indexed vector chunks.`, 'Document Deleted');
+      loadData(false);
+    } catch (err) {
+      console.error('Failed to delete document:', err);
+      toast.error(err.response?.data?.error || err.message || `Failed to delete "${docName}".`, 'Deletion Failed');
+      throw err;
+    }
+  };
+
+  const handleViewDocument = (id) => {
+    setSelectedDocumentId(id);
   };
 
   return (
     <div className="min-h-[calc(100dvh-4rem)] p-3.5 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 bg-ambient-mesh selection:bg-sky-500 selection:text-white">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
-        <div>
+      {/* ══════════════════════════════════════════════════════════════
+          1. HEADER & DYNAMIC SITUATIONAL REFRESH BUTTON
+         ══════════════════════════════════════════════════════════════ */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-              Admin Portal
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/35 shadow-liquid-sm">
+              Admin Ingestion Engine
             </span>
-            <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">• Vector Index Knowledge Base</span>
+            <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">• pgvector Knowledge Base</span>
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-1">
+          <h1 className="font-display text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             Institutional Document Ingestion
           </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Upload institutional PDFs, parse structural text, compute 768-dim embeddings, and manage vector indices.
+          </p>
         </div>
 
+        {/* Dynamic State-Adaptive Refresh Button (Idle / Refreshing / Render Warming Up / Refreshed / Auto-Retrying) */}
         <button
-          onClick={loadData}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl glass-panel-elevated text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all self-start sm:self-auto active:scale-95 shadow-sm border border-slate-200 dark:border-white/[0.1]"
+          onClick={handleManualButtonClick}
+          disabled={refreshStatus === 'refreshing' || refreshStatus === 'warming_up'}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all self-start md:self-auto active:scale-95 shadow-liquid-sm border text-xs font-bold cursor-pointer duration-300 ${
+            refreshStatus === 'refreshed'
+              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.35)] scale-105'
+              : refreshStatus === 'warming_up'
+              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.35)] cursor-wait animate-pulse'
+              : refreshStatus === 'failed'
+              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.35)] hover:bg-rose-500/20'
+              : refreshStatus === 'refreshing'
+              ? 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/50 shadow-glow-blue cursor-wait'
+              : 'glass-panel-elevated text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border-slate-200/90 dark:border-white/[0.12] hover:scale-105'
+          }`}
+          title={
+            refreshStatus === 'warming_up'
+              ? 'Backend is spinning up from Render free-tier sleep. Please wait while it initializes...'
+              : refreshStatus === 'failed'
+              ? retryCountdown
+                ? `Backend inactive. Auto-retrying in ${retryCountdown}s... Click to retry now.`
+                : 'Failed to connect. Click to retry.'
+              : 'Refresh institutional knowledge base'
+          }
         >
-          <RefreshCw
-            className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-sky-500 dark:text-sky-400' : 'text-sky-500 dark:text-sky-400'}`}
-          />
-          <span>Refresh Knowledge Base</span>
+          {refreshStatus === 'refreshed' ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-500 animate-scale-up stroke-[2.5]" />
+              <span>Knowledge Base Refreshed!</span>
+            </>
+          ) : refreshStatus === 'warming_up' ? (
+            <>
+              <Flame className="w-3.5 h-3.5 text-amber-500 animate-pulse stroke-[2.2]" />
+              <span>Backend Warming Up (Render Sleep)...</span>
+            </>
+          ) : refreshStatus === 'failed' ? (
+            <>
+              <AlertCircle className="w-3.5 h-3.5 text-rose-500 animate-bounce stroke-[2.2]" />
+              <span>
+                {retryCountdown
+                  ? `Failed (Retrying in ${retryCountdown}s...)`
+                  : 'Failed to Refresh (Retry)'}
+              </span>
+            </>
+          ) : refreshStatus === 'refreshing' ? (
+            <>
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-sky-500" />
+              <span>Refreshing Knowledge Base...</span>
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-3.5 h-3.5 text-sky-500" />
+              <span>Refresh Knowledge Base</span>
+            </>
+          )}
         </button>
       </div>
 
-      {/* Stats Summary Cards */}
+      {/* ══════════════════════════════════════════════════════════════
+          2. APPLE CONTROL CENTER METRIC WIDGETS WITH INCREASING NUMBER ANIMATION
+         ══════════════════════════════════════════════════════════════ */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-5">
-          <div className="glass-card p-5 rounded-3xl flex items-center gap-4 border-slate-200 dark:border-white/[0.08] shadow-sm">
-            <GlassIcon icon={FileText} variant="cyan" size="lg" />
-            <div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                Total Documents
-              </p>
-              <p className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-                {stats.totalDocuments || 0}
-              </p>
+          {/* Tile 1: Total Documents */}
+          <div className="relative group glass-panel-elevated p-6 rounded-4xl border border-sky-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+            <div className="relative z-10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Indexed Files
+                </span>
+                <GlassIcon icon={FileText} variant="cyan" size="xs" />
+              </div>
+
+              <div>
+                <div className="font-display text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white font-mono tracking-tight">
+                  <AnimatedCounter value={stats.totalDocuments || 0} duration={1200} />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                  <span className="text-sky-600 dark:text-sky-400 font-bold">Institutional Circulars</span>
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[11px] font-mono">
+                <span className="text-slate-500 dark:text-slate-400">Status:</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold">Synchronized</span>
+              </div>
             </div>
           </div>
 
-          <div className="glass-card p-5 rounded-3xl flex items-center gap-4 border-slate-200 dark:border-white/[0.08] shadow-sm glass-card-purple">
-            <GlassIcon icon={Layers} variant="purple" size="lg" />
-            <div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                Indexed Vector Chunks
-              </p>
-              <p className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-                {stats.totalChunks || 0}
-              </p>
+          {/* Tile 2: Indexed Chunks */}
+          <div className="relative group glass-panel-elevated p-6 rounded-4xl border border-purple-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+            <div className="relative z-10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Vector Chunks
+                </span>
+                <GlassIcon icon={Layers} variant="purple" size="xs" />
+              </div>
+
+              <div>
+                <div className="font-display text-3xl sm:text-4xl font-extrabold text-purple-600 dark:text-purple-400 font-mono tracking-tight">
+                  <AnimatedCounter value={stats.totalChunks || 0} duration={1300} />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                  <span className="text-purple-600 dark:text-purple-400 font-bold">768-Dim Text Embeddings</span>
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[11px] font-mono">
+                <span className="text-slate-500 dark:text-slate-400">Embedding:</span>
+                <span className="text-purple-600 dark:text-purple-400 font-bold">text-embedding-004</span>
+              </div>
             </div>
           </div>
 
-          <div className="glass-card p-5 rounded-3xl flex items-center gap-4 border-slate-200 dark:border-white/[0.08] shadow-sm glass-card-emerald">
-            <GlassIcon icon={HardDrive} variant="emerald" size="lg" />
-            <div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                Vector Storage Size
-              </p>
-              <p className="font-display text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-                {stats.totalStorageBytes
-                  ? `${(stats.totalStorageBytes / (1024 * 1024)).toFixed(2)} MB`
-                  : '0.00 MB'}
-              </p>
+          {/* Tile 3: Storage Size */}
+          <div className="relative group glass-panel-elevated p-6 rounded-4xl border border-emerald-500/30 shadow-liquid-md dark:shadow-glass-md overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-liquid-lg">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/15 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform" />
+            <div className="relative z-10 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Storage Footprint
+                </span>
+                <GlassIcon icon={HardDrive} variant="emerald" size="xs" />
+              </div>
+
+              <div>
+                <div className="font-display text-3xl sm:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 font-mono tracking-tight">
+                  <AnimatedCounter
+                    value={stats.totalStorageBytes ? stats.totalStorageBytes / (1024 * 1024) : 0}
+                    decimals={2}
+                    suffix=" MB"
+                    duration={1400}
+                  />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">PostgreSQL Binary Store</span>
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/80 dark:border-white/[0.08] flex items-center justify-between text-[11px] font-mono">
+                <span className="text-slate-500 dark:text-slate-400">Engine:</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold">pgvector Extension</span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Upload Dropzone */}
-      <FileDropzone onUploadSuccess={handleUploadSuccess} />
+      {/* ══════════════════════════════════════════════════════════════
+          3. UPLOAD DROPZONE
+         ══════════════════════════════════════════════════════════════ */}
+      <FileDropzone onUploadSuccess={handleUploadSuccess} documents={documents} />
 
-      {/* Documents Data Table */}
-      <div className="space-y-3">
+      {/* ══════════════════════════════════════════════════════════════
+          4. DOCUMENTS DATA TABLE
+         ══════════════════════════════════════════════════════════════ */}
+      <div className="space-y-3.5">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+          <h2 className="font-display text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             <Database className="w-4 h-4 text-sky-500 dark:text-sky-400" />
             <span>Indexed Institutional Records</span>
           </h2>
-          <span className="glass-badge px-2.5 py-1 rounded-full text-[10px] font-mono text-slate-500 dark:text-slate-400">
-            {documents.length} Files
+          <span className="glass-badge px-3.5 py-1 rounded-full text-[11px] font-mono font-bold text-sky-600 dark:text-sky-400 shadow-liquid-sm">
+            <AnimatedCounter value={documents.length} duration={800} /> Total Records
           </span>
         </div>
         <DocumentTable
           documents={documents}
-          onDocumentDeleted={handleDocumentDeleted}
-          onSelectDocument={setSelectedDocumentId}
+          onDelete={handleDeleteDocument}
+          onView={handleViewDocument}
+          onDocumentDeleted={handleDeleteDocument}
+          onSelectDocument={handleViewDocument}
+          newlyAddedId={newlyAddedId}
         />
       </div>
 
-      {/* Document View Mode Modal */}
+      {/* ══════════════════════════════════════════════════════════════
+          5. DOCUMENT VIEWER MODAL
+         ══════════════════════════════════════════════════════════════ */}
       {selectedDocumentId && (
         <DocumentViewerModal
           documentId={selectedDocumentId}

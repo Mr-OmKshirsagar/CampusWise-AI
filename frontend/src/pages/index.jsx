@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bot,
@@ -36,6 +36,17 @@ export default function LandingPage() {
   const [activeDemoPrompt, setActiveDemoPrompt] = useState(0);
   const [showExcerptModal, setShowExcerptModal] = useState(false);
 
+  const promptContainerRef = useRef(null);
+  const [promptIndicatorStyle, setPromptIndicatorStyle] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    opacity: 0,
+  });
+  const [isPromptStretching, setIsPromptStretching] = useState(false);
+  const prevPromptRef = useRef(activeDemoPrompt);
+
   const demoPrompts = [
     {
       query: 'What is the minimum attendance required to appear for semester end exams?',
@@ -48,7 +59,7 @@ export default function LandingPage() {
       variant: 'cyan',
       glowColor: 'from-sky-500/15 via-sky-500/5 to-transparent',
       borderColor: 'border-sky-500/35 dark:border-sky-500/40',
-      activeTabClass: 'bg-sky-500/15 dark:bg-sky-500/20 text-sky-700 dark:text-sky-200 border-sky-500/40 shadow-sm dark:shadow-glow-cyan scale-105',
+      activeTabClass: 'text-sky-700 dark:text-sky-200 font-bold scale-[1.02]',
       confidenceBadge: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25',
       categoryBadge: 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/35',
       iconGlow: 'bg-sky-500/20',
@@ -67,7 +78,7 @@ export default function LandingPage() {
       variant: 'amber',
       glowColor: 'from-amber-500/15 via-amber-500/5 to-transparent',
       borderColor: 'border-amber-500/35 dark:border-amber-500/40',
-      activeTabClass: 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-200 border-amber-500/40 shadow-sm dark:shadow-glow-amber scale-105',
+      activeTabClass: 'text-amber-700 dark:text-amber-200 font-bold scale-[1.02]',
       confidenceBadge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25',
       categoryBadge: 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/35',
       iconGlow: 'bg-amber-500/20',
@@ -86,7 +97,7 @@ export default function LandingPage() {
       variant: 'emerald',
       glowColor: 'from-emerald-500/15 via-emerald-500/5 to-transparent',
       borderColor: 'border-emerald-500/35 dark:border-emerald-500/40',
-      activeTabClass: 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-200 border-emerald-500/40 shadow-sm dark:shadow-glow-emerald scale-105',
+      activeTabClass: 'text-emerald-700 dark:text-emerald-200 font-bold scale-[1.02]',
       confidenceBadge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25',
       categoryBadge: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/35',
       iconGlow: 'bg-emerald-500/20',
@@ -105,7 +116,7 @@ export default function LandingPage() {
       variant: 'purple',
       glowColor: 'from-purple-500/15 via-purple-500/5 to-transparent',
       borderColor: 'border-purple-500/35 dark:border-purple-500/40',
-      activeTabClass: 'bg-purple-500/15 dark:bg-purple-500/20 text-purple-700 dark:text-purple-200 border-purple-500/40 shadow-sm dark:shadow-glow-purple scale-105',
+      activeTabClass: 'text-purple-700 dark:text-purple-200 font-bold scale-[1.02]',
       confidenceBadge: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25',
       categoryBadge: 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/35',
       iconGlow: 'bg-purple-500/20',
@@ -114,6 +125,83 @@ export default function LandingPage() {
         'Late Fee Penalty: A penalty of INR 100/- per calendar day shall be levied for payments received after the specified due date up to a maximum of 10 days. Thereafter, student credentials for LMS and examinations will be placed on hold.',
     },
   ];
+
+  // Track and animate 2D sliding liquid droplet behind active prompt across all screen sizes
+  useEffect(() => {
+    const updateDroplet = () => {
+      if (!promptContainerRef.current) return;
+      const container = promptContainerRef.current;
+      const activeButton = container.querySelector(`[data-demo-idx="${activeDemoPrompt}"]`);
+
+      if (activeButton) {
+        const containerRect = container.getBoundingClientRect();
+        const buttonRect = activeButton.getBoundingClientRect();
+
+        const left = buttonRect.left - containerRect.left;
+        const top = buttonRect.top - containerRect.top;
+        const width = buttonRect.width;
+        const height = buttonRect.height;
+
+        setPromptIndicatorStyle({
+          left,
+          top,
+          width,
+          height,
+          opacity: 1,
+        });
+      }
+    };
+
+    updateDroplet();
+
+    if (prevPromptRef.current !== activeDemoPrompt) {
+      setIsPromptStretching(true);
+      const timer = setTimeout(() => setIsPromptStretching(false), 380);
+      prevPromptRef.current = activeDemoPrompt;
+      window.addEventListener('resize', updateDroplet);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('resize', updateDroplet);
+      };
+    }
+
+    window.addEventListener('resize', updateDroplet);
+    return () => window.removeEventListener('resize', updateDroplet);
+  }, [activeDemoPrompt]);
+
+  const currentDemo = demoPrompts[activeDemoPrompt];
+
+  const getPromptTheme = (variant) => {
+    const map = {
+      cyan: {
+        glow: 'shadow-[0_0_24px_rgba(14,165,233,0.35),inset_0_1px_1px_0_rgba(255,255,255,0.7),inset_0_-1.5px_2px_0_rgba(56,189,248,0.5)]',
+        bg: 'bg-gradient-to-b from-sky-500/25 via-sky-500/15 to-indigo-500/25 dark:from-sky-400/30 dark:via-sky-400/20 dark:to-indigo-500/30',
+        border: 'border-sky-500/50 dark:border-sky-400/60',
+        rainbow: 'from-pink-500/60 via-cyan-400/80 to-emerald-400/60',
+      },
+      amber: {
+        glow: 'shadow-[0_0_24px_rgba(245,158,11,0.35),inset_0_1px_1px_0_rgba(255,255,255,0.7),inset_0_-1.5px_2px_0_rgba(251,191,36,0.5)]',
+        bg: 'bg-gradient-to-b from-amber-500/25 via-amber-500/15 to-orange-500/25 dark:from-amber-400/30 dark:via-amber-400/20 dark:to-orange-500/30',
+        border: 'border-amber-500/50 dark:border-amber-400/60',
+        rainbow: 'from-amber-400/70 via-orange-400/80 to-rose-400/70',
+      },
+      emerald: {
+        glow: 'shadow-[0_0_24px_rgba(16,185,129,0.35),inset_0_1px_1px_0_rgba(255,255,255,0.7),inset_0_-1.5px_2px_0_rgba(52,211,153,0.5)]',
+        bg: 'bg-gradient-to-b from-emerald-500/25 via-emerald-500/15 to-teal-500/25 dark:from-emerald-400/30 dark:via-emerald-400/20 dark:to-teal-500/30',
+        border: 'border-emerald-500/50 dark:border-emerald-400/60',
+        rainbow: 'from-emerald-400/70 via-teal-400/80 to-cyan-400/70',
+      },
+      purple: {
+        glow: 'shadow-[0_0_24px_rgba(168,85,247,0.35),inset_0_1px_1px_0_rgba(255,255,255,0.7),inset_0_-1.5px_2px_0_rgba(192,132,252,0.5)]',
+        bg: 'bg-gradient-to-b from-purple-500/25 via-purple-500/15 to-indigo-500/25 dark:from-purple-400/30 dark:via-purple-400/20 dark:to-indigo-500/30',
+        border: 'border-purple-500/50 dark:border-purple-400/60',
+        rainbow: 'from-purple-400/70 via-pink-400/80 to-indigo-400/70',
+      },
+    };
+    return map[variant] || map.cyan;
+  };
+
+  const activePromptTheme = getPromptTheme(currentDemo.variant);
 
   const domains = [
     {
@@ -231,8 +319,6 @@ export default function LandingPage() {
     },
   ];
 
-  const currentDemo = demoPrompts[activeDemoPrompt];
-
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col relative overflow-hidden bg-ambient-mesh selection:bg-sky-500 selection:text-white">
       {/* Background Ambient Floating Orbs */}
@@ -248,7 +334,7 @@ export default function LandingPage() {
            1. HERO SECTION
            ========================================================================= */}
         <section className="text-center max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
-          <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full glass-badge-glow text-sky-700 dark:text-sky-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-sm dark:shadow-glass-sm animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-badge-glow text-sky-700 dark:text-sky-300 text-[10px] sm:text-xs font-bold uppercase tracking-wider shadow-liquid-sm dark:shadow-glass-sm animate-fade-in">
             <span className="w-2 h-2 rounded-full bg-sky-500 dark:bg-sky-400 animate-pulse shadow-[0_0_8px_#38bdf8]" />
             <span>Official College RAG Platform • v1.1</span>
           </div>
@@ -265,11 +351,11 @@ export default function LandingPage() {
           </p>
 
           {/* CTA Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5 sm:gap-3 pt-2 w-full max-w-xs sm:max-w-md mx-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 pt-2 w-full max-w-xs sm:max-w-md mx-auto">
             {isAuthenticated ? (
               <Link
                 to="/chat"
-                className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-md dark:shadow-glow-blue flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
+                className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-liquid-md dark:shadow-glow-blue flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
               >
                 <Bot className="w-4 h-4" />
                 <span>Launch Student Assistant</span>
@@ -279,7 +365,7 @@ export default function LandingPage() {
               <>
                 <Link
                   to="/register"
-                  className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-md dark:shadow-glow-blue flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-full bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-liquid-md dark:shadow-glow-blue flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>Get Started Free</span>
@@ -288,11 +374,9 @@ export default function LandingPage() {
 
                 <Link
                   to="/login"
-                  className="group relative w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl glass-panel-elevated hover:bg-sky-500/[0.06] dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-300 font-bold text-xs sm:text-sm border border-slate-200/90 dark:border-white/[0.12] hover:border-sky-500/40 dark:hover:border-sky-500/50 hover:shadow-[0_12px_28px_-8px_rgba(14,165,233,0.25)] dark:hover:shadow-glow-cyan transition-all duration-300 ease-out hover:scale-105 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 shadow-sm overflow-hidden"
+                  className="group relative w-full sm:w-auto px-6 py-3.5 rounded-full glass-panel-elevated hover:bg-sky-500/[0.06] dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-200 hover:text-sky-600 dark:hover:text-sky-300 font-bold text-xs sm:text-sm border border-slate-200/90 dark:border-white/[0.12] hover:border-sky-500/40 dark:hover:border-sky-500/50 hover:shadow-[0_12px_28px_-8px_rgba(14,165,233,0.25)] dark:hover:shadow-glow-cyan transition-all duration-300 ease-out hover:scale-105 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 shadow-liquid-sm overflow-hidden"
                 >
-                  {/* Subtle top-down sheen on hover */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 dark:via-white/[0.06] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
-
                   <Lock className="w-4 h-4 text-slate-400 dark:text-slate-400 group-hover:text-sky-500 dark:group-hover:text-sky-400 group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300" />
                   <span className="relative z-10">Sign In</span>
                 </Link>
@@ -304,8 +388,8 @@ export default function LandingPage() {
         {/* =========================================================================
            2. INTERACTIVE LIVE RAG DEMO SANDBOX
            ========================================================================= */}
-        <section className="space-y-5 sm:space-y-6">
-          <div className="text-center space-y-1.5 sm:space-y-2 px-2">
+        <section className="space-y-6">
+          <div className="text-center space-y-2 px-2">
             <span className="text-[10px] sm:text-xs uppercase font-bold text-sky-600 dark:text-sky-400 tracking-widest flex items-center justify-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" />
               Interactive RAG Sandbox
@@ -318,26 +402,48 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* Prompt Selector Tabs */}
-          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2.5 max-w-4xl mx-auto px-1">
+          {/* Prompt Selector Tabs with 2D Sliding Liquid Glass Droplet */}
+          <div
+            ref={promptContainerRef}
+            className="relative grid grid-cols-1 md:grid-cols-2 gap-2.5 max-w-4xl mx-auto p-1.5 rounded-4xl glass-panel-elevated border border-slate-200/90 dark:border-white/[0.12] shadow-liquid-sm select-none"
+          >
+            {/* Viscous 2D Sliding Liquid Droplet Indicator */}
+            <div
+              style={{
+                transform: `translateX(${promptIndicatorStyle.left}px) translateY(${promptIndicatorStyle.top}px) scaleX(${isPromptStretching ? 1.06 : 1}) scaleY(${isPromptStretching ? 0.94 : 1})`,
+                width: `${promptIndicatorStyle.width}px`,
+                height: `${promptIndicatorStyle.height}px`,
+                opacity: promptIndicatorStyle.opacity,
+                transformOrigin: 'center',
+              }}
+              className={`absolute top-0 left-0 rounded-full border backdrop-blur-xl pointer-events-none transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${activePromptTheme.bg} ${activePromptTheme.border} ${activePromptTheme.glow}`}
+            >
+              {/* Top-down Specular Reflection Sheen */}
+              <div className="absolute inset-x-3 top-0.5 h-1/2 bg-gradient-to-b from-white/60 to-transparent dark:from-white/30 rounded-full pointer-events-none" />
+
+              {/* Bottom Chromatic Dispersion Rainbow Refraction Line */}
+              <div
+                className={`absolute inset-x-4 bottom-0 h-[1.5px] bg-gradient-to-r ${activePromptTheme.rainbow} blur-[0.5px] rounded-full pointer-events-none opacity-80`}
+              />
+            </div>
+
             {demoPrompts.map((item, idx) => {
               const isActive = activeDemoPrompt === idx;
               return (
                 <button
                   key={idx}
+                  data-demo-idx={idx}
                   onClick={() => setActiveDemoPrompt(idx)}
-                  className={`px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-[11px] sm:text-xs font-semibold transition-all duration-300 flex items-center gap-2 cursor-pointer active:scale-95 shrink-0 ${
-                    isActive
-                      ? `${item.activeTabClass} shadow-md`
-                      : 'glass-card border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-white/20'
-                  }`}
+                  className={`relative z-10 px-4 py-3 rounded-full text-[11px] sm:text-xs font-semibold transition-all duration-300 flex items-center gap-2.5 cursor-pointer active:scale-95 text-left ${isActive
+                      ? `${item.activeTabClass}`
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
                 >
                   <span
-                    className={`w-2 h-2 rounded-full ${item.dotColor} ${
-                      isActive ? 'animate-pulse' : 'opacity-70'
-                    } shrink-0`}
+                    className={`w-2 h-2 rounded-full ${item.dotColor} ${isActive ? 'animate-pulse scale-125' : 'opacity-70'
+                      } shrink-0`}
                   />
-                  <span className="truncate max-w-[170px] xs:max-w-[220px] sm:max-w-[280px]">
+                  <span className="truncate flex-1">
                     {item.query}
                   </span>
                 </button>
@@ -345,9 +451,9 @@ export default function LandingPage() {
             })}
           </div>
 
-          {/* Sandbox Live Response Showcase Card (Yellow Marked Box with Animated Transitions) */}
+          {/* Sandbox Live Response Showcase Card with Smooth Squircle Corners */}
           <div
-            className={`max-w-4xl mx-auto glass-panel-elevated p-5 sm:p-8 rounded-3xl border ${currentDemo.borderColor} shadow-sm dark:shadow-glass-lg relative overflow-hidden transition-all duration-500`}
+            className={`max-w-4xl mx-auto glass-panel-elevated p-6 sm:p-10 rounded-4xl border ${currentDemo.borderColor} shadow-liquid-lg dark:shadow-glass-lg relative overflow-hidden transition-all duration-500`}
           >
             {/* Dynamic ambient background mesh gradient */}
             <div
@@ -356,18 +462,18 @@ export default function LandingPage() {
 
             {/* Ambient Corner Glow Bubble */}
             <div
-              className={`absolute -top-16 -right-16 w-44 h-44 ${currentDemo.iconGlow} rounded-full blur-3xl pointer-events-none animate-stage-glow transition-all duration-700`}
+              className={`absolute -top-16 -right-16 w-48 h-48 ${currentDemo.iconGlow} rounded-full blur-3xl pointer-events-none animate-stage-glow transition-all duration-700`}
             />
 
-            {/* Inner Content Container animated on activeDemoPrompt change via key={activeDemoPrompt} */}
+            {/* Inner Content Container */}
             <div
               key={activeDemoPrompt}
-              className="relative z-10 space-y-4 sm:space-y-6 animate-stage-reveal"
+              className="relative z-10 space-y-5 sm:space-y-6 animate-stage-reveal"
             >
               {/* Student Query Simulated Input */}
-              <div className="flex items-start gap-3 sm:gap-3.5 pb-4 sm:pb-5 border-b border-slate-200/80 dark:border-white/[0.08]">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md animate-metric-pop">
-                  <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <div className="flex items-start gap-3.5 pb-5 border-b border-slate-200/80 dark:border-white/[0.08]">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-sky-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md animate-metric-pop">
+                  <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                 </div>
                 <div className="space-y-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -375,7 +481,7 @@ export default function LandingPage() {
                       Student Natural Language Query
                     </span>
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider shadow-sm transition-all duration-300 border ${currentDemo.categoryBadge}`}
+                      className={`px-3 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider shadow-sm transition-all duration-300 border ${currentDemo.categoryBadge}`}
                     >
                       {currentDemo.category}
                     </span>
@@ -387,34 +493,34 @@ export default function LandingPage() {
               </div>
 
               {/* AI Grounded Response */}
-              <div className="flex items-start gap-3 sm:gap-3.5">
+              <div className="flex items-start gap-3.5">
                 <div className="shrink-0 transition-transform duration-300">
                   <GlassIcon icon={Bot} variant={currentDemo.variant} size="xs" className="sm:w-10 sm:h-10" />
                 </div>
-                <div className="space-y-3 flex-1 min-w-0">
+                <div className="space-y-3.5 flex-1 min-w-0">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200">CampusWise AI</span>
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                         100% Grounded
                       </span>
                     </div>
 
-                    <span className={`text-[11px] sm:text-xs font-mono font-bold px-2.5 py-0.5 rounded-full border shadow-sm transition-all duration-300 ${currentDemo.confidenceBadge}`}>
+                    <span className={`text-[11px] sm:text-xs font-mono font-bold px-3 py-0.5 rounded-full border shadow-sm transition-all duration-300 ${currentDemo.confidenceBadge}`}>
                       {currentDemo.confidence}% Vector Confidence
                     </span>
                   </div>
 
-                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50/80 dark:bg-white/[0.03] p-3.5 sm:p-4.5 rounded-2xl border border-slate-200/80 dark:border-white/[0.08] break-words shadow-inner">
+                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed bg-slate-50/80 dark:bg-white/[0.03] p-4 sm:p-5 rounded-3xl border border-slate-200/80 dark:border-white/[0.08] break-words shadow-inner">
                     {currentDemo.answer}
                   </p>
 
                   {/* Source Reference & Excerpt Trigger */}
-                  <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3">
+                  <div className="pt-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Source:</span>
-                      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl glass-badge border-slate-200 dark:border-white/[0.1] text-xs max-w-full">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-badge border-slate-200/90 dark:border-white/[0.1] text-xs max-w-full shadow-liquid-sm">
                         <FileText className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400 shrink-0" />
                         <span className="text-slate-800 dark:text-white font-medium truncate max-w-[140px] xs:max-w-[200px]">
                           {currentDemo.source}
@@ -425,27 +531,25 @@ export default function LandingPage() {
 
                     <button
                       onClick={() => setShowExcerptModal(!showExcerptModal)}
-                      className="text-xs text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-semibold flex items-center gap-1.5 transition-all self-end sm:self-auto active:scale-95 cursor-pointer py-1 px-2 rounded-xl hover:bg-sky-500/10"
+                      className="text-xs text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 font-semibold flex items-center gap-1.5 transition-all self-end sm:self-auto active:scale-95 cursor-pointer py-1.5 px-3 rounded-full hover:bg-sky-500/10"
                     >
                       <span>{showExcerptModal ? 'Hide Raw Excerpt' : 'View Verified Raw Excerpt'}</span>
                       <ChevronRight
-                        className={`w-3.5 h-3.5 transition-transform duration-300 ${
-                          showExcerptModal ? 'rotate-90 text-sky-600 dark:text-sky-400' : 'text-slate-400'
-                        }`}
+                        className={`w-3.5 h-3.5 transition-transform duration-300 ${showExcerptModal ? 'rotate-90 text-sky-600 dark:text-sky-400' : 'text-slate-400'
+                          }`}
                       />
                     </button>
                   </div>
 
-                  {/* Smooth Expanding & Shrinking Collapsible Verified Excerpt (CSS Grid Transition) */}
+                  {/* Smooth Expanding Collapsible Verified Excerpt with Squircle Rounded Corners */}
                   <div
-                    className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                      showExcerptModal
+                    className={`grid transition-[grid-template-rows,opacity,margin] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${showExcerptModal
                         ? 'grid-rows-[1fr] opacity-100 mt-3'
                         : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
-                    }`}
+                      }`}
                   >
                     <div className="overflow-hidden">
-                      <div className="p-3.5 sm:p-4 rounded-2xl glass-input border border-slate-200/80 dark:border-white/[0.1] text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans space-y-2 shadow-inner bg-slate-50/90 dark:bg-white/[0.02]">
+                      <div className="p-4 sm:p-5 rounded-3xl glass-input border border-slate-200/90 dark:border-white/[0.1] text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans space-y-2 shadow-inner bg-slate-50/90 dark:bg-white/[0.02]">
                         <div className="flex items-center justify-between text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
                           <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
                             <ShieldCheck className="w-3.5 h-3.5" />
@@ -468,8 +572,8 @@ export default function LandingPage() {
         {/* =========================================================================
            3. RAG PIPELINE ARCHITECTURE SHOWCASE
            ========================================================================= */}
-        <section className="space-y-5 sm:space-y-6">
-          <div className="text-center space-y-1.5 sm:space-y-2 px-2">
+        <section className="space-y-6">
+          <div className="text-center space-y-2 px-2">
             <span className="text-[10px] sm:text-xs uppercase font-bold text-purple-600 dark:text-purple-400 tracking-widest flex items-center justify-center gap-1.5">
               <Layers className="w-3.5 h-3.5" />
               Engine Architecture
@@ -488,8 +592,8 @@ export default function LandingPage() {
         {/* =========================================================================
            4. INSTITUTIONAL DOMAINS MATRIX
            ========================================================================= */}
-        <section className="space-y-5 sm:space-y-6">
-          <div className="text-center space-y-1.5 sm:space-y-2 px-2">
+        <section className="space-y-6">
+          <div className="text-center space-y-2 px-2">
             <span className="text-[10px] sm:text-xs uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-widest flex items-center justify-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5" />
               Comprehensive Campus Coverage
@@ -502,11 +606,11 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {domains.map((domain, index) => (
               <div
                 key={index}
-                className={`group relative glass-panel-elevated p-5 sm:p-7 rounded-3xl border border-slate-200 dark:border-white/[0.08] space-y-3.5 sm:space-y-4.5 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] cursor-pointer overflow-hidden shadow-sm dark:shadow-glass-sm ${domain.hoverBorder} ${domain.hoverShadow}`}
+                className={`group relative glass-panel-elevated p-6 sm:p-8 rounded-4xl border border-slate-200/90 dark:border-white/[0.08] space-y-4 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] cursor-pointer overflow-hidden shadow-liquid-sm dark:shadow-glass-sm ${domain.hoverBorder} ${domain.hoverShadow}`}
               >
                 {/* Ambient dynamic radial glow bubble on hover */}
                 <div
@@ -520,12 +624,12 @@ export default function LandingPage() {
                   <div className="transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-translate-y-1">
                     <GlassIcon icon={domain.icon} variant={domain.variant} size="md" />
                   </div>
-                  <div className="w-7 h-7 rounded-xl glass-badge flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-2 transition-all duration-300">
+                  <div className="w-8 h-8 rounded-full glass-badge flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-2 transition-all duration-300 shadow-liquid-sm">
                     <ArrowRight className="w-3.5 h-3.5 text-slate-700 dark:text-slate-200" />
                   </div>
                 </div>
 
-                <div className="relative z-10 space-y-1.5 sm:space-y-2">
+                <div className="relative z-10 space-y-2">
                   <h3
                     className={`font-display font-bold text-sm sm:text-lg text-slate-900 dark:text-white leading-snug transition-colors duration-200 ${domain.titleColor}`}
                   >
@@ -539,7 +643,7 @@ export default function LandingPage() {
                 {/* Bottom accent progress bar indicator */}
                 <div className="relative z-10 pt-1">
                   <div
-                    className={`h-1 rounded-full bg-slate-200 dark:bg-white/[0.06] group-hover:bg-gradient-to-r ${domain.lineGradient} w-10 group-hover:w-full transition-all duration-500 ease-out shadow-sm`}
+                    className={`h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] group-hover:bg-gradient-to-r ${domain.lineGradient} w-10 group-hover:w-full transition-all duration-500 ease-out shadow-sm`}
                   />
                 </div>
               </div>
@@ -550,12 +654,12 @@ export default function LandingPage() {
         {/* =========================================================================
            5. TECHNICAL BENCHMARKS & PERFORMANCE
            ========================================================================= */}
-        <section className="space-y-5 sm:space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <section className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
             {benchmarks.map((item, idx) => (
               <div
                 key={idx}
-                className={`group relative glass-panel-elevated p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-white/[0.1] text-center space-y-2 sm:space-y-2.5 shadow-sm dark:shadow-glass-md transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.03] cursor-pointer overflow-hidden ${item.hoverBorder} ${item.hoverShadow}`}
+                className={`group relative glass-panel-elevated p-5 sm:p-7 rounded-4xl border border-slate-200/90 dark:border-white/[0.1] text-center space-y-2.5 shadow-liquid-sm dark:shadow-glass-md transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.03] cursor-pointer overflow-hidden ${item.hoverBorder} ${item.hoverShadow}`}
               >
                 {/* Ambient dynamic radial glow bubble on hover */}
                 <div
@@ -572,7 +676,7 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Big Metric Value with color shift */}
+                {/* Big Metric Value */}
                 <div
                   className={`font-display text-base xs:text-xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight font-mono relative z-10 transition-all duration-300 ${item.valueColor}`}
                 >
@@ -596,7 +700,7 @@ export default function LandingPage() {
         {/* =========================================================================
            6. CTA BANNER
            ========================================================================= */}
-        <section className="glass-panel-elevated p-6 xs:p-8 sm:p-12 rounded-3xl sm:rounded-[2.5rem] border border-sky-500/30 text-center space-y-4 sm:space-y-6 shadow-md dark:shadow-glow-blue relative overflow-hidden">
+        <section className="glass-panel-elevated p-6 xs:p-8 sm:p-14 rounded-4xl sm:rounded-[3rem] border border-sky-500/30 text-center space-y-4 sm:space-y-6 shadow-liquid-lg dark:shadow-glow-blue relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-2xl mx-auto space-y-3 sm:space-y-4">
             <h2 className="font-display text-xl xs:text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
@@ -608,7 +712,7 @@ export default function LandingPage() {
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 to={isAuthenticated ? '/chat' : '/register'}
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-2xl bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-600 text-white font-bold text-xs sm:text-sm shadow-md dark:shadow-glow-blue hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-gradient-to-r from-sky-500 via-electric-500 to-indigo-600 text-white font-bold text-xs sm:text-sm shadow-liquid-md dark:shadow-glow-blue hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <span>Get Started Now</span>
                 <ArrowRight className="w-4 h-4" />
@@ -621,7 +725,7 @@ export default function LandingPage() {
       {/* =========================================================================
          7. FOOTER
          ========================================================================= */}
-      <footer className="border-t border-slate-200 dark:border-white/[0.08] glass-panel py-6 sm:py-8 px-3.5 sm:px-8 mt-8 sm:mt-12 bg-white/80 dark:bg-[#030508]/90 transition-colors duration-300">
+      <footer className="border-t border-slate-200 dark:border-white/[0.08] glass-panel py-6 sm:py-8 px-4 sm:px-8 mt-8 sm:mt-12 bg-white/80 dark:bg-[#030508]/90 transition-colors duration-300">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left text-xs text-slate-500 dark:text-slate-400">
           <CampusWiseLogo size="sm" />
           <div className="flex items-center gap-2">
