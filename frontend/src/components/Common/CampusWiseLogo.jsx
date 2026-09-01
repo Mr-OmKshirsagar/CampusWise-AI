@@ -1,12 +1,7 @@
 import React from 'react';
 import { useServerHealthStore } from '../../store/serverHealthStore.js';
 
-export default function CampusWiseLogo({
-  size = 'md',
-  showText = true,
-  badgeText = 'RAG v1.2',
-  showStatusDot = false,
-}) {
+export default function CampusWiseLogo({ size = 'md', showText = true, badgeText = 'RAG v1.2' }) {
   const { status } = useServerHealthStore();
 
   const sizeMap = {
@@ -23,18 +18,21 @@ export default function CampusWiseLogo({
     switch (status) {
       case 'warming_up':
         return {
-          dotClass: 'bg-amber-400 shadow-[0_0_10px_#fbbf24] border-white dark:border-[#030508]',
-          title: 'Backend Server Warming Up / Starting...',
+          dotClass: 'bg-amber-400 border-white dark:border-[#070b12] shadow-[0_0_12px_#fbbf24,0_0_4px_#f59e0b]',
+          pingClass: 'bg-amber-400/60',
+          title: 'Backend Server Warming Up / Initializing (Render Free Tier)...',
         };
       case 'offline':
         return {
-          dotClass: 'bg-rose-500 shadow-[0_0_10px_#f43f5e] border-white dark:border-[#030508]',
+          dotClass: 'bg-rose-500 border-white dark:border-[#070b12] shadow-[0_0_12px_#f43f5e,0_0_4px_#e11d48]',
+          pingClass: 'bg-rose-500/60',
           title: 'Backend Server Inactive / Disconnected',
         };
       default: // 'online'
         return {
-          dotClass: 'bg-emerald-500 shadow-[0_0_8px_#10b981] border-white dark:border-[#030508]',
-          title: 'Backend Server Active & Connected (pgvector Engine Online)',
+          dotClass: 'bg-emerald-400 border-white dark:border-[#070b12] shadow-[0_0_12px_#10b981,0_0_4px_#34d399]',
+          pingClass: 'bg-emerald-400/60',
+          title: 'Backend Server Online & Active (pgvector Engine Connected)',
         };
     }
   };
@@ -79,13 +77,16 @@ export default function CampusWiseLogo({
           </svg>
         </div>
 
-        {/* Live Operational Status Orb (Only shown when explicitly requested) */}
-        {showStatusDot && (
+        {/* Live Operational Status Orb (Dynamic Glowing Radar Ping: Green / Yellow / Red) */}
+        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center">
+          <span
+            className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${statusConfig.pingClass}`}
+          />
           <span
             title={statusConfig.title}
-            className={`absolute -top-0.5 -right-0.5 ${currentSize.dot} rounded-full border-2 transition-colors duration-500 animate-pulse cursor-help ${statusConfig.dotClass}`}
+            className={`relative inline-flex ${currentSize.dot} rounded-full border-2 transition-all duration-500 cursor-help ${statusConfig.dotClass}`}
           />
-        )}
+        </span>
       </div>
 
       {showText && (

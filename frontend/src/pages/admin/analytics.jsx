@@ -125,6 +125,7 @@ export default function AdminAnalyticsPage() {
         useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
         startAutoRetryCountdown(6);
       } else {
+        // Server is online, it was an auth or application error
         setRefreshStatus('idle');
         useServerHealthStore.getState().setServerOnline();
       }

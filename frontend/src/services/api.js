@@ -52,12 +52,6 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // If the server responded with any valid HTTP status < 502 (e.g. 200, 400, 401, 403, 404, 422, 500),
-    // the backend is active and reachable
-    if (error.response && error.response.status < 502) {
-      useServerHealthStore.getState().setServerOnline();
-    }
-
     const isSilent = Boolean(
       error.config?.silent ||
       error.config?.headers?.['x-silent-request'] === 'true'
@@ -74,6 +68,9 @@ api.interceptors.response.use(
         error.response?.data?.error || 'Backend server is unreachable or starting up. Reconnecting in background...',
         isSilent
       );
+    } else if (error.response) {
+      // If the backend sent a response (400, 401, 403, 404, 500, etc.), the server is ALIVE and reachable!
+      useServerHealthStore.getState().setServerOnline();
     }
 
     if (error.response && error.response.status === 401) {

@@ -123,9 +123,9 @@ export default function AdminDocumentsPage() {
       if (isNetworkOrDown) {
         setRefreshStatus('failed');
         useServerHealthStore.getState().setServerOffline(null, isRetryAttempt);
-        // Schedule automatic reconnection retry in 6 seconds
         startAutoRetryCountdown(6);
       } else {
+        // The server is online and responding (e.g. 401 Unauthorized or other app error)
         setRefreshStatus('idle');
         useServerHealthStore.getState().setServerOnline();
       }

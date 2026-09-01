@@ -65,13 +65,15 @@ export const useServerHealthStore = create((set, get) => ({
       const timer = setInterval(async () => {
         try {
           const res = await axios.get(healthUrl, { timeout: 4500 });
-          if (res.status === 200) {
+          if (res.status === 200 || res.data?.status === 'ok') {
             get().setServerOnline();
           }
         } catch (e) {
-          // Still waiting for backend to spin up or restart
+          if (e.response && e.response.status < 502) {
+            get().setServerOnline();
+          }
         }
-      }, 5500);
+      }, 4500);
 
       set({ healthCheckTimer: timer });
     }
@@ -82,11 +84,13 @@ export const useServerHealthStore = create((set, get) => ({
       const rawBaseUrl = (import.meta.env.VITE_API_URL || '/api').trim().replace(/\/+$/, '');
       const healthUrl = rawBaseUrl.endsWith('/api') ? `${rawBaseUrl}/health` : `${rawBaseUrl}/api/health`;
       const res = await axios.get(healthUrl, { timeout: 3500 });
-      if (res.status === 200) {
+      if (res.status === 200 || res.data?.status === 'ok') {
         get().setServerOnline();
       }
     } catch (e) {
-      if (!e.response || [502, 503, 504].includes(e.response?.status)) {
+      if (e.response && e.response.status < 502) {
+        get().setServerOnline();
+      } else {
         get().setServerOffline(null, silent);
       }
     }
