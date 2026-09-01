@@ -68,3 +68,7 @@ Desktop.ini
 *.swp
 *.swo
 .history/
+
+# Design & Documentation (Universal / Local Guides)
+design.md
+universal-liquid-glass-design.md
